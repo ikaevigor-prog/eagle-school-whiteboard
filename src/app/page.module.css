@@ -1,0 +1,75 @@
+.container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background: radial-gradient(circle at center, #1e293b, #005568);
+}
+
+.card {
+  padding: 3rem;
+  max-width: 500px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.card h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  color: #FF5722;
+}
+
+.card p {
+  font-size: 1.125rem;
+  color: #94a3b8;
+  line-height: 1.6;
+}
+
+.buttonGroup {
+  display: flex;
+  gap: 16px;
+  justify-content: center;
+  margin-top: 1rem;
+}
+
+.button {
+  background-color: #FF5722;
+  color: white;
+  padding: 0.85rem 1.75rem;
+  border-radius: 999px; /* Pill shape */
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.2s ease;
+  box-shadow: 0 4px 14px 0 rgba(255, 87, 34, 0.39);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.button:hover {
+  background-color: #e64a19;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(255, 87, 34, 0.5);
+}
+
+.secondaryBtn {
+  background-color: transparent;
+  color: #FF5722;
+  border: 2px solid #FF5722;
+  padding: 0.85rem 1.75rem;
+  border-radius: 999px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.secondaryBtn:hover {
+  background-color: rgba(255, 87, 34, 0.1);
+  transform: translateY(-2px);
+}

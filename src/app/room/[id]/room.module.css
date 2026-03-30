@@ -1,0 +1,225 @@
+.loading {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  font-size: 1.2rem;
+  color: var(--foreground);
+}
+
+.roomContainer {
+  display: flex;
+  height: 100vh;
+  width: 100vw;
+  overflow: hidden;
+  position: relative;
+  background: var(--background);
+}
+
+.whiteboardArea {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+}
+
+/* 
+  Hardware Onboarding Modal 
+*/
+.modalBackground {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  width: 100vw;
+  background: radial-gradient(circle at center, #1e293b, #020617);
+  position: fixed;
+  top: 0;
+  left: 0;
+  z-index: 9999;
+}
+
+.consentCard {
+  max-width: 480px;
+  padding: 32px;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+  animation: fadeIn 0.4s ease-out;
+}
+
+.alertIconBlock {
+  background: rgba(239, 68, 68, 0.1);
+  padding: 16px;
+  border-radius: 50%;
+  margin-bottom: 8px;
+}
+
+.consentCard h1 {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #fff;
+}
+
+.consentCard p {
+  color: #94a3b8;
+  font-size: 0.95rem;
+  line-height: 1.6;
+}
+
+.permissionButtons {
+  display: flex;
+  gap: 16px;
+  margin-top: 16px;
+  width: 100%;
+}
+
+.primaryBtn {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 8px;
+  background: #FF5722;
+  color: white;
+  padding: 12px;
+  border: none;
+  border-radius: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 4px 14px rgba(255, 87, 34, 0.4);
+  transition: transform 0.2s, background 0.2s;
+}
+
+.primaryBtn:hover {
+  background: #e64a19;
+  transform: translateY(-2px);
+}
+
+.secondaryBtn {
+  flex: 1;
+  background: transparent;
+  color: #005568;
+  border: 1px solid #005568;
+  border-radius: 12px;
+  cursor: pointer;
+  font-weight: 600;
+  transition: background 0.2s, color 0.2s;
+}
+
+.secondaryBtn:hover {
+  background: #005568;
+  color: #fff;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* 
+  Draggable Video Styling
+*/
+.draggableVideo {
+  z-index: 100;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  cursor: grab;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: #000;
+  transition: box-shadow 0.2s;
+}
+
+.draggableVideo:active {
+  cursor: grabbing;
+  box-shadow: 0 15px 40px rgba(0, 0, 0, 0.7);
+}
+
+.videoContent {
+  width: 100%;
+  height: 100%;
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 500;
+  user-select: none;
+}
+
+.controlsOverlay {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  padding: 8px;
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+  background: linear-gradient(to top, rgba(0,0,0,0.8), transparent);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.draggableVideo:hover .controlsOverlay {
+  opacity: 1;
+}
+
+.controlsOverlay button {
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(4px);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 6px 14px;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+
+.controlsOverlay button:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+.bottomControls {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 10;
+  display: flex;
+  gap: 16px;
+  align-items: center;
+}
+
+.classInfo {
+  background: var(--glass-bg);
+  backdrop-filter: var(--glass-blur);
+  padding: 8px 16px;
+  border-radius: 12px;
+  border: 1px solid var(--glass-border);
+  font-weight: 500;
+  color: white;
+  font-size: 0.9rem;
+}
+
+.leaveBtn {
+  background: #ef4444;
+  color: white;
+  padding: 8px 24px;
+  border-radius: 12px;
+  border: none;
+  font-weight: 600;
+  cursor: pointer;
+  transition: transform 0.2s, background 0.2s;
+}
+
+.leaveBtn:hover {
+  background: #dc2626;
+  transform: translateY(-2px);
+}
