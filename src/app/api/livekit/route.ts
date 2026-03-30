@@ -28,7 +28,7 @@ export async function GET(req: NextRequest) {
   at.addGrant({
     roomJoin: true,
     room,
-    canPublish: isTeacher,      // Only Teacher can stream video/audio freely by default
+    canPublish: true,           // Allow everyone to open camera and mic (Two-way video!)
     canSubscribe: true,         // Everyone can watch
     canPublishData: true,       // Everyone can send Drawings / Sync updates via DataChannels
   });
