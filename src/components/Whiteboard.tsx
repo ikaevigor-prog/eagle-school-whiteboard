@@ -317,16 +317,20 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
     const now = new Date();
     const sessionIdStr = `${now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} • ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
 
+    const urlParams = new URLSearchParams(window.location.search);
+    const studentId = urlParams.get('student_id') || 'guest';
+
     const payload = textNodes.filter(n => n.text.trim().length > 0).map(n => ({
-      student_id: 'guest',
-      session_id: sessionIdStr,
-      concept: n.text
+      student_id: studentId,
+      word: n.text,
+      translation: 'Авто-сохранено с урока',
+      status: 'new'
     }));
 
     if (payload.length > 0) {
-      const { error } = await supabase.from('student_vocabulary').insert(payload);
+      const { error } = await supabase.from('dictionary_words').insert(payload);
       if (!error) {
-         alert(`Successfully extracted ${payload.length} vocabulary words to CRM! AI can now analyze them.`);
+         alert(`Successfully exported ${payload.length} words to the CRM Dictionary!`);
       } else {
          alert("Error saving vocabulary. Are Supabase tables ready?");
       }
