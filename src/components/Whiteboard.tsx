@@ -1,15 +1,15 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Stage, Layer, Line, Rect, Circle, Group } from 'react-konva';
+import { Stage, Layer, Line, Rect, Circle, Group, Text } from 'react-konva';
 import { Html } from 'react-konva-utils';
 import { 
   MousePointer2, Pen, Eraser, Square, Circle as CircleIcon, 
-  Video, VideoOff, Music, FileVideo, Save, BookOpen, X, Trash2, StickyNote, Play, Pause, BookmarkCheck
+  Video, VideoOff, Music, FileVideo, Save, BookOpen, X, Trash2, StickyNote, Play, Pause, BookmarkCheck, Type
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
-type ToolType = 'select' | 'pen' | 'eraser' | 'rect' | 'circle' | 'sticky';
+type ToolType = 'select' | 'pen' | 'eraser' | 'rect' | 'circle' | 'sticky' | 'text';
 
 type StrokeElement = { type: 'stroke'; id: string; points: number[]; color: string; width: number; tool: 'pen' | 'eraser' };
 type RectElement = { type: 'rect'; id: string; x: number; y: number; width: number; height: number; fill: string };
@@ -19,8 +19,10 @@ type MediaElement = {
   isPlaying?: boolean; progress?: number; playbackRate?: number; 
 };
 type StickyElement = { type: 'sticky'; id: string; x: number; y: number; text: string; color: string };
+type TextElement = { type: 'text'; id: string; x: number; y: number; text: string; color: string; fontSize: number };
+type FrameElement = { type: 'frame'; id: string; x: number; y: number; width: number; height: number; title: string };
 
-export type BoardElement = StrokeElement | RectElement | CircleElement | MediaElement | StickyElement;
+export type BoardElement = StrokeElement | RectElement | CircleElement | MediaElement | StickyElement | TextElement | FrameElement;
 
 interface CustomBoardProps {
   role?: 'teacher' | 'student';
@@ -257,29 +259,44 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
   };
 
   const handleEndSession = async () => {
-    if (!window.confirm("End session and extract Vocabulary for the student?")) return;
+    if (!window.confirm("End session and extract text/vocabulary for the AI and student?")) return;
     
-    // Extract semantics
-    const stickyNotes = elementsRef.current.filter((el) => el.type === 'sticky') as StickyElement[];
-    if (stickyNotes.length === 0) {
-      return alert("No new vocabulary (sticky notes) found on board.");
+    // Extract semantics (both stickies and native text)
+    const textNodes = elementsRef.current.filter((el) => el.type === 'sticky' || el.type === 'text') as (StickyElement | TextElement)[];
+    
+    if (textNodes.length === 0) {
+      return alert("No text found on board to extract.");
     }
 
-    const payload = stickyNotes.map(sn => ({
-      student_id: 'guest', // In real prod, this is dynamically loaded from Auth
+    const payload = textNodes.filter(n => n.text.trim().length > 0).map(n => ({
+      student_id: 'guest',
       session_id: Date.now().toString(),
-      concept: sn.text
+      concept: n.text
     }));
 
-    const { error } = await supabase.from('student_vocabulary').insert(payload);
-    if (!error) {
-       alert(`Successfully extracted ${payload.length} vocabulary words to CRM!`);
-    } else {
-       alert("Error saving vocabulary. Are Supabase tables ready?");
+    if (payload.length > 0) {
+      const { error } = await supabase.from('student_vocabulary').insert(payload);
+      if (!error) {
+         alert(`Successfully extracted ${payload.length} vocabulary words to CRM! AI can now analyze them.`);
+      } else {
+         alert("Error saving vocabulary. Are Supabase tables ready?");
+      }
     }
   };
 
   useEffect(() => {
+    // Check if initial empty board -> append Default Frame!
+    const timer = setTimeout(() => {
+       if (elementsRef.current.length === 0) {
+           const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+           const defaultFrame: FrameElement = { 
+             type: 'frame', id: 'default-frame', x: 100, y: 100, 
+             width: 1200, height: 800, title: `Lesson Frame • ${today}` 
+           };
+           updateElementsLocallyAndSync([defaultFrame]);
+       }
+    }, 1500); // 1.5 second initialization delay to wait for network sync
+    
     setDimensions({ width: window.innerWidth, height: window.innerHeight });
     const handleResize = () => setDimensions({ width: window.innerWidth, height: window.innerHeight });
     window.addEventListener('resize', handleResize);
@@ -376,13 +393,18 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
       setTool('select');
       setSelectedId(id); // Auto-select newly dropped sticky notes!
       isDrawing.current = false;
+    } else if (tool === 'text') {
+      newElements.push({ type: 'text', id, x: pos.x, y: pos.y, text: '', color: penColor, fontSize: penWidth * 8 });
+      setTool('select');
+      setSelectedId(id);
+      isDrawing.current = false;
     }
     
     updateElementsLocallyAndSync(newElements);
   };
 
   const handleMouseMove = (e: any) => {
-    if (!isDrawing.current || tool === 'select' || tool === 'sticky') return;
+    if (!isDrawing.current || tool === 'select' || tool === 'sticky' || tool === 'text') return;
 
     const stage = e.target.getStage();
     const pos = getPointerPositionWithScale(stage);
@@ -616,6 +638,98 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
                 </Group>
               );
             }
+            // --- Native Text ---
+            if (el.type === 'text') {
+              return (
+                 <Group key={el.id} x={el.x} y={el.y} draggable={tool === 'select'}
+                   onMouseDown={() => { if (tool === 'select') setSelectedId(el.id); }}
+                   onDragEnd={(e) => {
+                     const newElements = elements.map(item => item.id === el.id ? { ...item, x: e.target.x(), y: e.target.y() } : item);
+                     updateElementsLocallyAndSync(newElements);
+                   }}
+                 >
+                   {isSelected ? (
+                      <Html divProps={{ style: { pointerEvents: 'auto' } }}>
+                         <textarea 
+                           value={el.text} autoFocus
+                           onChange={(e) => {
+                             const newElements = elements.map(item => item.id === el.id ? { ...item, text: e.target.value } : item);
+                             updateElementsLocallyAndSync(newElements);
+                           }}
+                           placeholder="Type here..."
+                           style={{ 
+                             border: 'none', background: 'transparent', resize: 'none', 
+                             outline: '2px solid rgba(59, 130, 246, 0.5)', borderRadius: '4px',
+                             fontFamily: 'inherit', fontSize: Math.max(24, el.fontSize || 24) + 'px',
+                             color: el.color, fontWeight: 600, minWidth: '300px', minHeight: '100px'
+                           }}
+                         />
+                      </Html>
+                   ) : (
+                      <Text 
+                         text={el.text || '...'} 
+                         fontSize={Math.max(24, el.fontSize || 24)} 
+                         fill={el.color} 
+                         fontFamily="inherit" 
+                         fontWeight={600} 
+                      />
+                   )}
+                 </Group>
+              );
+            }
+
+            // --- Expandable Lesson Frame ---
+            if (el.type === 'frame') {
+               return (
+                  <Group key={el.id} x={el.x} y={el.y} draggable={tool === 'select'}
+                     onMouseDown={() => { if (tool === 'select') setSelectedId(el.id); }}
+                     onDragEnd={(e) => {
+                        const newElements = elements.map(item => item.id === el.id ? { ...item, x: e.target.x(), y: e.target.y() } : item);
+                        updateElementsLocallyAndSync(newElements);
+                     }}
+                  >
+                     <Rect 
+                        width={el.width} height={el.height} fill="#ffffff" 
+                        cornerRadius={12} shadowBlur={20} shadowColor="rgba(0,0,0,0.1)"
+                        stroke={isSelected ? '#3b82f6' : 'transparent'} strokeWidth={4}
+                     />
+                     <Text 
+                        x={24} y={-32} text={el.title} fontSize={20} fill="#64748b" fontWeight={600} fontFamily="inherit"
+                     />
+                     
+                     {/* Resizing Handle Bottom Right */}
+                     {isSelected && tool === 'select' && (
+                        <Circle 
+                           x={el.width} y={el.height} radius={12} fill="#3b82f6" stroke="#ffffff" strokeWidth={3}
+                           draggable
+                           onDragMove={(e) => {
+                              e.cancelBubble = true;
+                              const newWidth = Math.max(300, e.target.x());
+                              const newHeight = Math.max(300, e.target.y());
+                              const newElements = elements.map(item => item.id === el.id ? { ...item, width: newWidth, height: newHeight } : item);
+                              setElements(newElements);
+                           }}
+                           onDragEnd={(e) => {
+                              e.cancelBubble = true;
+                              const newWidth = Math.max(300, e.target.x());
+                              const newHeight = Math.max(300, e.target.y());
+                              const newElements = elements.map(item => item.id === el.id ? { ...item, width: newWidth, height: newHeight } : item);
+                              updateElementsLocallyAndSync(newElements);
+                           }}
+                           onMouseEnter={e => {
+                              const container = e.target.getStage()?.container();
+                              if (container) container.style.cursor = 'nwse-resize';
+                           }}
+                           onMouseLeave={e => {
+                              const container = e.target.getStage()?.container();
+                              if (container) container.style.cursor = 'default';
+                           }}
+                        />
+                     )}
+                  </Group>
+               );
+            }
+
             return null;
           })}
         </Layer>
@@ -634,6 +748,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
         <ToolButton icon={<Eraser size={20} />} active={tool === 'eraser'} onClick={() => setTool(tool === 'eraser' ? 'select' : 'eraser')} title="Eraser" />
         <ToolButton icon={<Square size={20} />} active={tool === 'rect'} onClick={() => setTool(tool === 'rect' ? 'select' : 'rect')} title="Square" />
         <ToolButton icon={<CircleIcon size={20} />} active={tool === 'circle'} onClick={() => setTool(tool === 'circle' ? 'select' : 'circle')} title="Circle" />
+        <ToolButton icon={<Type size={20} />} active={tool === 'text'} onClick={() => setTool(tool === 'text' ? 'select' : 'text')} title="Text" />
         <ToolButton icon={<StickyNote size={20} />} active={tool === 'sticky'} onClick={() => setTool(tool === 'sticky' ? 'select' : 'sticky')} title="Sticky Note (N)" />
         <ToolButton icon={<Trash2 size={20} color="#ef4444" />} active={false} onClick={() => updateElementsLocallyAndSync([])} title="Clear Entire Board" />
         {role === 'teacher' && (

@@ -39,11 +39,22 @@ function ActiveVideoFeeds({ showTeacher, showStudent }: { showTeacher: boolean, 
           default={{ x: window.innerWidth - 320, y: 20, width: 300, height: 169 }}
           minWidth={150} minHeight={84} bounds="parent"
           className={styles.draggableVideo}
+          style={{ zIndex: 50 }}
         >
-          <ParticipantTile 
-            trackRef={teacherTrack} 
-            style={{ width: '100%', height: '100%', borderRadius: '12px', overflow: 'hidden' }} 
-          />
+          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <div style={{
+               position: 'absolute', top: 8, left: 8, zIndex: 10, background: 'rgba(0,0,0,0.6)',
+               color: 'white', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold',
+               backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', gap: '6px',
+               border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+               <span style={{ color: '#3b82f6', background: 'rgba(59, 130, 246, 0.2)', padding: '2px 6px', borderRadius: '4px' }}>T</span> Teacher
+            </div>
+            <ParticipantTile 
+              trackRef={teacherTrack} 
+              style={{ width: '100%', height: '100%', borderRadius: '12px', overflow: 'hidden', outline: 'none' }} 
+            />
+          </div>
         </Rnd>
       )}
 
@@ -52,11 +63,24 @@ function ActiveVideoFeeds({ showTeacher, showStudent }: { showTeacher: boolean, 
           default={{ x: window.innerWidth - 320, y: 210, width: 300, height: 169 }}
           minWidth={150} minHeight={84} bounds="parent"
           className={styles.draggableVideo}
+          style={{ zIndex: 50 }}
         >
-          <ParticipantTile 
-            trackRef={studentTrack} 
-            style={{ width: '100%', height: '100%', borderRadius: '12px', overflow: 'hidden' }} 
-          />
+          <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+            <div style={{
+               position: 'absolute', top: 8, left: 8, zIndex: 10, background: 'rgba(0,0,0,0.6)',
+               color: 'white', padding: '4px 8px', borderRadius: '6px', fontSize: '12px', fontWeight: 'bold',
+               backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', gap: '6px',
+               border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+               <span style={{ color: '#a855f7', background: 'rgba(168, 85, 247, 0.2)', padding: '2px 6px', borderRadius: '4px' }}>S</span> Student
+            </div>
+            <div style={{ 
+               width: '100%', height: '100%', borderRadius: '12px', overflow: 'hidden', 
+               outline: '3px solid #8b5cf6', outlineOffset: '-3px', boxShadow: '0 0 20px rgba(139, 92, 246, 0.3)' 
+            }}>
+               <ParticipantTile trackRef={studentTrack} style={{ width: '100%', height: '100%', outline: 'none' }} />
+            </div>
+          </div>
         </Rnd>
       )}
     </>
