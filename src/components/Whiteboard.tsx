@@ -464,10 +464,10 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
               );
             }
             if (el.type === 'rect') {
-              return <Rect key={el.id} x={el.x} y={el.y} width={el.width} height={el.height} fill={el.fill} cornerRadius={4} opacity={0.6} onClick={() => { if (tool === 'select') setSelectedId(el.id); }} {...isSelected ? { stroke: '#3b82f6', strokeWidth: 4 } : {}} />;
+              return <Rect key={el.id} x={el.x} y={el.y} width={el.width} height={el.height} fill="transparent" stroke={el.fill} strokeWidth={4} cornerRadius={4} onClick={() => { if (tool === 'select') setSelectedId(el.id); }} onTap={() => { if (tool === 'select') setSelectedId(el.id); }} {...isSelected ? { shadowColor: '#3b82f6', shadowBlur: 10, shadowOpacity: 1 } : {}} />;
             }
             if (el.type === 'circle') {
-              return <Circle key={el.id} x={el.x} y={el.y} radius={el.radius} fill={el.fill} opacity={0.6} onClick={() => { if (tool === 'select') setSelectedId(el.id); }} {...isSelected ? { stroke: '#3b82f6', strokeWidth: 4 } : {}} />;
+              return <Circle key={el.id} x={el.x} y={el.y} radius={el.radius} fill="transparent" stroke={el.fill} strokeWidth={4} onClick={() => { if (tool === 'select') setSelectedId(el.id); }} onTap={() => { if (tool === 'select') setSelectedId(el.id); }} {...isSelected ? { shadowColor: '#3b82f6', shadowBlur: 10, shadowOpacity: 1 } : {}} />;
             }
             
             // --- Draggable Sticky Note ---
@@ -575,11 +575,11 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
         boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 10
       }}>
         <ToolButton icon={<MousePointer2 size={20} />} active={tool === 'select'} onClick={() => setTool('select')} title="Pan / Select (Drag Media!)" />
-        <ToolButton icon={<Pen size={20} />} active={tool === 'pen'} onClick={() => setTool('pen')} title="Pen" />
-        <ToolButton icon={<Eraser size={20} />} active={tool === 'eraser'} onClick={() => setTool('eraser')} title="Eraser" />
-        <ToolButton icon={<Square size={20} />} active={tool === 'rect'} onClick={() => setTool('rect')} title="Square" />
-        <ToolButton icon={<CircleIcon size={20} />} active={tool === 'circle'} onClick={() => setTool('circle')} title="Circle" />
-        <ToolButton icon={<StickyNote size={20} />} active={tool === 'sticky'} onClick={() => setTool('sticky')} title="Sticky Note (N)" />
+        <ToolButton icon={<Pen size={20} />} active={tool === 'pen'} onClick={() => setTool(tool === 'pen' ? 'select' : 'pen')} title="Pen" />
+        <ToolButton icon={<Eraser size={20} />} active={tool === 'eraser'} onClick={() => setTool(tool === 'eraser' ? 'select' : 'eraser')} title="Eraser" />
+        <ToolButton icon={<Square size={20} />} active={tool === 'rect'} onClick={() => setTool(tool === 'rect' ? 'select' : 'rect')} title="Square" />
+        <ToolButton icon={<CircleIcon size={20} />} active={tool === 'circle'} onClick={() => setTool(tool === 'circle' ? 'select' : 'circle')} title="Circle" />
+        <ToolButton icon={<StickyNote size={20} />} active={tool === 'sticky'} onClick={() => setTool(tool === 'sticky' ? 'select' : 'sticky')} title="Sticky Note (N)" />
         <ToolButton icon={<Trash2 size={20} color="#ef4444" />} active={false} onClick={() => updateElementsLocallyAndSync([])} title="Clear Entire Board" />
         
         <div style={{ height: 1, backgroundColor: 'rgba(0,0,0,0.1)', margin: '4px 0' }} />
@@ -598,6 +598,95 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
       </div>
 
       {/* Pen Settings Sub-menu */}
+      {tool === 'pen' && (
+        <div style={{
+          position: 'absolute', top: '50%', left: 90, transform: 'translateY(-50%)',
+          display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', 
+          background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', 
+          borderRadius: '16px', border: '1px solid var(--glass-border)',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 9,
+          animation: 'slideIn 0.2s ease-out'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
+            <span style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Color</span>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
+              {PRESET_COLORS.map(c => (
+                <button 
+                  key={c} onClick={() => setPenColor(c)} title={c}
+                  style={{ 
+                    width: 24, height: 24, borderRadius: '50%', backgroundColor: c, 
+                    border: penColor === c ? '2px solid #000' : '1px solid rgba(0,0,0,0.1)', 
+                    cursor: 'pointer', outline: 'none', transition: 'transform 0.1s',
+                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
+                  }} 
+                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
+                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+                />
+              ))}
+              <div 
+                title="Custom Color"
+                style={{ 
+                  position: 'relative', width: 24, height: 24, borderRadius: '50%', 
+                  overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)',
+                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
+                }}
+              >
+                <div style={{ width: '100%', height: '100%', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }} />
+                <input 
+                  type="color" value={penColor} onChange={(e) => setPenColor(e.target.value)}
+                  style={{ opacity: 0, position: 'absolute', top: -10, left: -10, width: 40, height: 40, cursor: 'pointer' }} 
+                />
+              </div>
+            </div>
+          </div>
+          <div style={{ height: 1, backgroundColor: 'rgba(0,0,0,0.1)' }} />
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
+            <span style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Size</span>
+            {[2, 6, 12].map(w => (
+              <button 
+                key={w} onClick={() => setPenWidth(w)} title={`${w}px`}
+                style={{ 
+                  width: 32, height: 32, borderRadius: '8px', display: 'flex', 
+                  alignItems: 'center', justifyContent: 'center', 
+                  background: penWidth === w ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
+                  border: 'none', cursor: 'pointer', transition: 'background 0.2s'
+                }}
+              >
+                <div style={{ width: w, height: w, backgroundColor: penColor, borderRadius: '50%' }} />
+              </button>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Lesson Library Overlay */}
+      {isLibraryOpen && (
+        <div style={{
+          position: 'absolute', top: '50%', left: 90, transform: 'translateY(-50%)',
+          width: '320px', padding: '24px', 
+          background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', 
+          borderRadius: '16px', border: '1px solid var(--glass-border)',
+          boxShadow: '0 10px 40px rgba(0,0,0,0.15)', zIndex: 20,
+          display: 'flex', flexDirection: 'column', gap: '16px',
+          animation: 'slideIn 0.2s ease-out', color: '#0f172a'
+        }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <h3 style={{ margin: 0, fontSize: '18px', fontWeight: 600 }}>Lesson Library</h3>
+            <button onClick={() => setIsLibraryOpen(false)} style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+              <X size={20} color="#64748b" />
+            </button>
+          </div>
+          <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>
+            Database connection pending... Wait for Supabase variables to be configured to save or load lessons.
+          </p>
+          <button style={{
+            padding: '12px', borderRadius: '8px', background: '#005568', color: 'white',
+            border: 'none', fontWeight: 600, cursor: 'pointer'
+          }}>
+            Save Current Board
+          </button>
+        </div>
+      )}
       {tool === 'pen' && (
         <div style={{
           position: 'absolute', top: '50%', left: 90, transform: 'translateY(-50%)',
