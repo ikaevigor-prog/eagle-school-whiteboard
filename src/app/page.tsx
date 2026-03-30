@@ -18,11 +18,11 @@ export default function Home() {
 
   return (
     <main className={styles.container}>
-      <div className={`glass ${styles.card}`}>
+      <div className={`${styles.darkGlass} ${styles.card}`}>
         <h1>Eagle School Virtual Class</h1>
-        <p>Access denied. Please enter this classroom through your main Account dashboard.</p>
+        <p>Access denied. Please enter this classroom securely through your main Account dashboard.</p>
         <div className={styles.buttonGroup}>
-          <a href="http://localhost:3000" className={styles.button}>Return to Account</a>
+          <a href="https://app.eagle-school.com" className={styles.button}>Return to Account</a>
           <button onClick={requestPermissions} className={styles.secondaryBtn}>Give permissions</button>
         </div>
       </div>
