@@ -1,11 +1,11 @@
 'use client';
 
 import { useState, useRef, useEffect } from 'react';
-import { Stage, Layer, Line, Rect, Circle, Group, Text } from 'react-konva';
+import { Stage, Layer, Line, Rect, Circle, Group, Text, Image as KonvaImage } from 'react-konva';
 import { Html } from 'react-konva-utils';
 import { 
   MousePointer2, Pen, Eraser, Square, Circle as CircleIcon, 
-  Video, VideoOff, Music, FileVideo, Save, BookOpen, X, Trash2, StickyNote, Play, Pause, BookmarkCheck, Type
+  Video, VideoOff, Music, FileVideo, Save, BookOpen, X, Trash2, StickyNote, Play, Pause, BookmarkCheck, Type, Image as ImageIcon, Loader2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 
@@ -21,8 +21,9 @@ type MediaElement = {
 type StickyElement = { type: 'sticky'; id: string; x: number; y: number; text: string; color: string };
 type TextElement = { type: 'text'; id: string; x: number; y: number; text: string; color: string; fontSize: number };
 type FrameElement = { type: 'frame'; id: string; x: number; y: number; width: number; height: number; title: string };
+type ImageElement = { type: 'image'; id: string; x: number; y: number; width: number; height: number; url: string; };
 
-export type BoardElement = StrokeElement | RectElement | CircleElement | MediaElement | StickyElement | TextElement | FrameElement;
+export type BoardElement = StrokeElement | RectElement | CircleElement | MediaElement | StickyElement | TextElement | FrameElement | ImageElement;
 
 interface CustomBoardProps {
   role?: 'teacher' | 'student';
@@ -49,6 +50,50 @@ const PRESET_COLORS = [
   '#6366f1', '#a855f7', '#ec4899', 
   '#005568', '#fef08a', '#ffffff'
 ];
+
+// --- Native Image Loader Component ---
+function URLImage({ element, isSelected, tool, onSelect, onDragEnd, onResize }: any) {
+  const [img, setImg] = useState<HTMLImageElement | null>(null);
+  
+  useEffect(() => {
+    const image = new window.Image();
+    image.crossOrigin = 'Anonymous';
+    image.src = element.url;
+    image.addEventListener('load', () => setImg(image));
+  }, [element.url]);
+
+  return (
+    <Group x={element.x} y={element.y} draggable={tool === 'select'} onDragEnd={onDragEnd} onMouseDown={onSelect} onTap={onSelect}>
+      <KonvaImage image={img || undefined} width={element.width} height={element.height} stroke={isSelected ? '#3b82f6' : 'transparent'} strokeWidth={4} cornerRadius={8} shadowBlur={10} shadowColor="rgba(0,0,0,0.2)" />
+      {isSelected && tool === 'select' && (
+         <Circle 
+            x={element.width} y={element.height} radius={12} fill="#3b82f6" stroke="#ffffff" strokeWidth={3}
+            draggable
+            onDragMove={(e) => {
+               e.cancelBubble = true;
+               const newWidth = Math.max(50, e.target.x());
+               const newHeight = Math.max(50, e.target.y());
+               onResize(newWidth, newHeight, false);
+            }}
+            onDragEnd={(e) => {
+               e.cancelBubble = true;
+               const newWidth = Math.max(50, e.target.x());
+               const newHeight = Math.max(50, e.target.y());
+               onResize(newWidth, newHeight, true);
+            }}
+            onMouseEnter={e => {
+               const container = e.target.getStage()?.container();
+               if (container) container.style.cursor = 'nwse-resize';
+            }}
+            onMouseLeave={e => {
+               const container = e.target.getStage()?.container();
+               if (container) container.style.cursor = 'default';
+            }}
+         />
+      )}
+    </Group>
+  );
+}
 
 // --- Custom Audio Player deeply synced to Global State ---
 function CustomAudioPlayer({ element, onUpdate }: { element: MediaElement, onUpdate: (updates: Partial<MediaElement>) => void }) {
@@ -220,7 +265,8 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
   const [penWidth, setPenWidth] = useState(4);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [pendingMediaType, setPendingMediaType] = useState<'audio' | 'video' | null>(null);
+  const [pendingMediaType, setPendingMediaType] = useState<'audio' | 'video' | 'image' | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
   
   const [scale, setScale] = useState(1);
@@ -460,44 +506,77 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
     }
   };
 
-  const handleAddMedia = (mediaType: 'audio' | 'video') => {
+  const handleAddMedia = (mediaType: 'audio' | 'video' | 'image') => {
     setPendingMediaType(mediaType);
     if (fileInputRef.current) {
-      fileInputRef.current.accept = mediaType === 'video' ? 'video/*' : 'audio/*';
+      if (mediaType === 'video') fileInputRef.current.accept = 'video/*';
+      else if (mediaType === 'audio') fileInputRef.current.accept = 'audio/*';
+      else fileInputRef.current.accept = 'image/*';
       fileInputRef.current.click();
     }
   };
 
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (!file || !pendingMediaType) return;
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const url = reader.result as string; 
-      const centerX = (dimensions.width / 2 - position.x) / scale - (pendingMediaType === 'video' ? 280 : 150);
-      const centerY = (dimensions.height / 2 - position.y) / scale - (pendingMediaType === 'video' ? 157 : 30);
+    setIsUploading(true);
+
+    try {
+      const ext = file.name.split('.').pop() || 'tmp';
+      const filename = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
+      
+      const { data, error } = await supabase.storage.from('lesson_materials').upload(filename, file);
+      
+      if (error) throw new Error(error.message);
+
+      const { data: publicUrlData } = supabase.storage.from('lesson_materials').getPublicUrl(filename);
+      const url = publicUrlData.publicUrl;
+
+      const centerX = (dimensions.width / 2 - position.x) / scale - 150;
+      const centerY = (dimensions.height / 2 - position.y) / scale - 150;
       const id = Date.now().toString();
 
-      const newElements = [...elements, {
-        type: 'media' as const,
-        id,
-        x: centerX,
-        y: centerY,
-        url,
-        mediaType: pendingMediaType,
-        isPlaying: false,
-        progress: 0,
-        playbackRate: 1
-      }];
+      let newElements = [...elements];
+
+      if (pendingMediaType === 'image') {
+         const img = new window.Image();
+         img.src = url;
+         await new Promise((resolve) => {
+            img.onload = () => {
+               const width = img.width > 800 ? 800 : img.width;
+               const height = width * (img.height / img.width);
+               newElements.push({ type: 'image', id, x: centerX, y: centerY, width, height, url });
+               resolve(true);
+            };
+            img.onerror = () => {
+               newElements.push({ type: 'image', id, x: centerX, y: centerY, width: 400, height: 300, url });
+               resolve(true);
+            }
+         });
+      } else {
+         newElements.push({
+           type: 'media' as const,
+           id,
+           x: centerX,
+           y: centerY,
+           url,
+           mediaType: pendingMediaType,
+           isPlaying: false,
+           progress: 0,
+           playbackRate: 1
+         });
+      }
       
       updateElementsLocallyAndSync(newElements);
-      setSelectedId(id); // Auto-select new media!
-    };
-    reader.readAsDataURL(file);
-
-    e.target.value = '';
-    setPendingMediaType(null);
+      setSelectedId(id);
+    } catch (err: any) {
+      alert("Failed to upload: " + err.message + "\nAre you sure you created the 'lesson_materials' bucket in Supabase and made it PUBLIC?");
+    } finally {
+      e.target.value = '';
+      setPendingMediaType(null);
+      setIsUploading(false);
+    }
   };
 
   if (dimensions.width === 0) return null;
@@ -730,6 +809,29 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
                );
             }
 
+            // --- Uploaded Images ---
+            if (el.type === 'image') {
+               return (
+                  <URLImage 
+                     key={el.id} element={el} isSelected={isSelected} tool={tool}
+                     onSelect={() => { if (tool === 'select') setSelectedId(el.id); }}
+                     onDragEnd={(e: any) => {
+                        e.cancelBubble = true;
+                        const newElements = elements.map(item => item.id === el.id ? { ...item, x: e.target.x(), y: e.target.y() } : item);
+                        updateElementsLocallyAndSync(newElements);
+                     }}
+                     onResize={(newWidth: number, newHeight: number, isFinal: boolean) => {
+                        const newElements = elements.map(item => item.id === el.id ? { ...item, width: newWidth, height: newHeight } : item);
+                        if (isFinal) {
+                           updateElementsLocallyAndSync(newElements);
+                        } else {
+                           setElements(newElements);
+                        }
+                     }}
+                  />
+               );
+            }
+
             return null;
           })}
         </Layer>
@@ -760,8 +862,18 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
         {role === 'teacher' && (
           <>
             <ToolButton icon={<BookOpen size={20} />} active={isLibraryOpen} onClick={() => setIsLibraryOpen(!isLibraryOpen)} title="Lesson Library" />
-            <ToolButton icon={<Music size={20} />} active={false} onClick={() => handleAddMedia('audio')} title="Add Audio (Local or URL)" />
-            <ToolButton icon={<FileVideo size={20} />} active={false} onClick={() => handleAddMedia('video')} title="Add Video (Local or URL)" />
+            <ToolButton 
+               icon={isUploading && pendingMediaType === 'image' ? <Loader2 size={20} className="animate-spin" /> : <ImageIcon size={20} />} 
+               active={false} onClick={() => handleAddMedia('image')} title="Upload Image to Cloud" 
+            />
+            <ToolButton 
+               icon={isUploading && pendingMediaType === 'audio' ? <Loader2 size={20} className="animate-spin" /> : <Music size={20} />} 
+               active={false} onClick={() => handleAddMedia('audio')} title="Upload Audio" 
+            />
+            <ToolButton 
+               icon={isUploading && pendingMediaType === 'video' ? <Loader2 size={20} className="animate-spin" /> : <FileVideo size={20} />} 
+               active={false} onClick={() => handleAddMedia('video')} title="Upload Video" 
+            />
             <div style={{ height: 1, backgroundColor: 'rgba(0,0,0,0.1)', margin: '4px 0' }} />
           </>
         )}
