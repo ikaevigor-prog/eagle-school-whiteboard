@@ -850,7 +850,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
         display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px 8px', 
         background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', 
         borderRadius: '16px', border: '1px solid var(--glass-border)',
-        boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 10
+        boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 50
       }}>
         <ToolButton icon={<MousePointer2 size={20} />} active={tool === 'select'} onClick={() => setTool('select')} title="Pan / Select (Drag Media!)" />
         <ToolButton icon={<Pen size={20} />} active={tool === 'pen'} onClick={() => setTool(tool === 'pen' ? 'select' : 'pen')} title="Pen" />
@@ -885,18 +885,17 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
           </>
         )}
         
-        <ToolButton icon={showTeacher ? <Video size={18} /> : <VideoOff size={18} />} active={showTeacher} onClick={onToggleTeacher} title="Toggle Teacher Video" />
-        <ToolButton icon={showStudent ? <Video size={18} /> : <VideoOff size={18} />} active={showStudent} onClick={onToggleStudent} title="Toggle Student Video" />
+        <ToolButton icon={showTeacher ? <Video size={18} color="#3b82f6" /> : <VideoOff size={18} color="#64748b" />} active={showTeacher} onClick={onToggleTeacher} title="Toggle Teacher Video" />
+        <ToolButton icon={showStudent ? <Video size={18} color="#8b5cf6" /> : <VideoOff size={18} color="#64748b" />} active={showStudent} onClick={onToggleStudent} title="Toggle Student Video" />
       </div>
 
-      {/* Pen Settings Sub-menu */}
-      {tool === 'pen' && (
+      {['pen', 'rect', 'circle', 'text', 'sticky'].includes(tool) && (
         <div style={{
           position: 'absolute', top: '50%', left: 90, transform: 'translateY(-50%)',
           display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', 
           background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', 
           borderRadius: '16px', border: '1px solid var(--glass-border)',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 9,
+          boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 50,
           animation: 'slideIn 0.2s ease-out'
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
