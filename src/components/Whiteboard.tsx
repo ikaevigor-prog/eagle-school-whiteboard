@@ -924,7 +924,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
         }}>
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', width: 'max-content' }}>
             <span style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Color</span>
-            <div style={{ display: 'flex', flexDirection: 'row', gap: '6px' }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {PRESET_COLORS.map(c => (
                 <button 
                   key={c} onClick={() => setPenColor(c)} title={c}
@@ -1040,66 +1040,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
           </div>
         </div>
       )}
-      {tool === 'pen' && (
-        <div style={{
-          position: 'absolute', top: '50%', left: 90, transform: 'translateY(-50%)',
-          display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', 
-          background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', 
-          borderRadius: '16px', border: '1px solid var(--glass-border)',
-          boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 9,
-          animation: 'slideIn 0.2s ease-out'
-        }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Color</span>
-            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '8px' }}>
-              {PRESET_COLORS.map(c => (
-                <button 
-                  key={c} onClick={() => setPenColor(c)} title={c}
-                  style={{ 
-                    width: 24, height: 24, borderRadius: '50%', backgroundColor: c, 
-                    border: penColor === c ? '2px solid #000' : '1px solid rgba(0,0,0,0.1)', 
-                    cursor: 'pointer', outline: 'none', transition: 'transform 0.1s',
-                    boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
-                  }} 
-                  onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
-                  onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
-                />
-              ))}
-              <div 
-                title="Custom Color"
-                style={{ 
-                  position: 'relative', width: 24, height: 24, borderRadius: '50%', 
-                  overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)',
-                  boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
-                }}
-              >
-                <div style={{ width: '100%', height: '100%', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }} />
-                <input 
-                  type="color" value={penColor} onChange={(e) => setPenColor(e.target.value)}
-                  style={{ opacity: 0, position: 'absolute', top: -10, left: -10, width: 40, height: 40, cursor: 'pointer' }} 
-                />
-              </div>
-            </div>
-          </div>
-          <div style={{ height: 1, backgroundColor: 'rgba(0,0,0,0.1)' }} />
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
-            <span style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Size</span>
-            {[2, 6, 12].map(w => (
-              <button 
-                key={w} onClick={() => setPenWidth(w)} title={`${w}px`}
-                style={{ 
-                  width: 32, height: 32, borderRadius: '8px', display: 'flex', 
-                  alignItems: 'center', justifyContent: 'center', 
-                  background: penWidth === w ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
-                  border: 'none', cursor: 'pointer', transition: 'background 0.2s'
-                }}
-              >
-                <div style={{ width: w, height: w, backgroundColor: penColor, borderRadius: '50%' }} />
-              </button>
-            ))}
-          </div>
-        </div>
-      )}
+
     </div>
   );
 }
