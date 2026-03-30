@@ -5,8 +5,9 @@ import { Stage, Layer, Line, Rect, Circle, Group } from 'react-konva';
 import { Html } from 'react-konva-utils';
 import { 
   MousePointer2, Pen, Eraser, Square, Circle as CircleIcon, 
-  Video, VideoOff, Music, FileVideo, Save, BookOpen, X, Trash2, StickyNote, Play, Pause
+  Video, VideoOff, Music, FileVideo, Save, BookOpen, X, Trash2, StickyNote, Play, Pause, BookmarkCheck
 } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 
 type ToolType = 'select' | 'pen' | 'eraser' | 'rect' | 'circle' | 'sticky';
 
@@ -223,6 +224,60 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
+  
+  // -- CRM Data States --
+  const [savedLessons, setSavedLessons] = useState<Lesson[]>([]);
+  const [isSaving, setIsSaving] = useState(false);
+  const [newLessonName, setNewLessonName] = useState('');
+
+  const fetchLessons = async () => {
+    const { data, error } = await supabase.from('lessons').select('*').order('created_at', { ascending: false });
+    if (!error && data) setSavedLessons(data);
+  };
+
+  useEffect(() => {
+    if (isLibraryOpen) fetchLessons();
+  }, [isLibraryOpen]);
+
+  const handleSaveLesson = async () => {
+    if (!newLessonName.trim()) return alert("Enter a lesson name!");
+    setIsSaving(true);
+    const { error } = await supabase.from('lessons').insert([{
+      title: newLessonName,
+      board_state: elementsRef.current
+    }]);
+    setIsSaving(false);
+    if (!error) {
+      setNewLessonName('');
+      fetchLessons();
+      alert("Lesson saved to CRM!");
+    } else {
+      alert("Error saving lesson. Check Supabase connection.");
+    }
+  };
+
+  const handleEndSession = async () => {
+    if (!window.confirm("End session and extract Vocabulary for the student?")) return;
+    
+    // Extract semantics
+    const stickyNotes = elementsRef.current.filter((el) => el.type === 'sticky') as StickyElement[];
+    if (stickyNotes.length === 0) {
+      return alert("No new vocabulary (sticky notes) found on board.");
+    }
+
+    const payload = stickyNotes.map(sn => ({
+      student_id: 'guest', // In real prod, this is dynamically loaded from Auth
+      session_id: Date.now().toString(),
+      concept: sn.text
+    }));
+
+    const { error } = await supabase.from('student_vocabulary').insert(payload);
+    if (!error) {
+       alert(`Successfully extracted ${payload.length} vocabulary words to CRM!`);
+    } else {
+       alert("Error saving vocabulary. Are Supabase tables ready?");
+    }
+  };
 
   useEffect(() => {
     setDimensions({ width: window.innerWidth, height: window.innerHeight });
@@ -581,6 +636,9 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
         <ToolButton icon={<CircleIcon size={20} />} active={tool === 'circle'} onClick={() => setTool(tool === 'circle' ? 'select' : 'circle')} title="Circle" />
         <ToolButton icon={<StickyNote size={20} />} active={tool === 'sticky'} onClick={() => setTool(tool === 'sticky' ? 'select' : 'sticky')} title="Sticky Note (N)" />
         <ToolButton icon={<Trash2 size={20} color="#ef4444" />} active={false} onClick={() => updateElementsLocallyAndSync([])} title="Clear Entire Board" />
+        {role === 'teacher' && (
+          <ToolButton icon={<BookmarkCheck size={20} color="#10b981" />} active={false} onClick={handleEndSession} title="End Class & Extract Vocabulary" />
+        )}
         
         <div style={{ height: 1, backgroundColor: 'rgba(0,0,0,0.1)', margin: '4px 0' }} />
         
@@ -676,15 +734,42 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
               <X size={20} color="#64748b" />
             </button>
           </div>
-          <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>
-            Database connection pending... Wait for Supabase variables to be configured to save or load lessons.
-          </p>
-          <button style={{
-            padding: '12px', borderRadius: '8px', background: '#005568', color: 'white',
-            border: 'none', fontWeight: 600, cursor: 'pointer'
-          }}>
-            Save Current Board
-          </button>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+             <input 
+                type="text" value={newLessonName} onChange={e => setNewLessonName(e.target.value)}
+                placeholder="Lesson Name..." 
+                style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
+             />
+             <button onClick={handleSaveLesson} disabled={isSaving} style={{
+               padding: '12px', borderRadius: '8px', background: isSaving ? '#94a3b8' : '#005568', color: 'white',
+               border: 'none', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s'
+             }}>
+               {isSaving ? 'Saving...' : 'Save Current Board'}
+             </button>
+          </div>
+          
+          <div style={{ height: 1, backgroundColor: 'rgba(0,0,0,0.1)' }} />
+          
+          <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {savedLessons.length === 0 ? (
+               <p style={{ margin: 0, fontSize: '14px', color: '#64748b', textAlign: 'center' }}>
+                 No CRM lessons found. Check Supabase connection or save one!
+               </p>
+            ) : (
+                savedLessons.map(lesson => (
+                  <div key={lesson.id} onClick={() => updateElementsLocallyAndSync(lesson.board_state)} style={{
+                     padding: '12px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '8px', cursor: 'pointer',
+                     border: '1px solid rgba(59, 130, 246, 0.1)', transition: 'background 0.2s'
+                  }}>
+                     <strong style={{ fontSize: '14px', color: '#0f172a' }}>{lesson.title}</strong>
+                     <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+                        {lesson.board_state.length} elements
+                     </div>
+                  </div>
+                ))
+            )}
+          </div>
         </div>
       )}
       {tool === 'pen' && (
