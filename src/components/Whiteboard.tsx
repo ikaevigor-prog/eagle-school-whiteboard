@@ -314,9 +314,12 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
       return alert("No text found on board to extract.");
     }
 
+    const now = new Date();
+    const sessionIdStr = `${now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} • ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+
     const payload = textNodes.filter(n => n.text.trim().length > 0).map(n => ({
       student_id: 'guest',
-      session_id: Date.now().toString(),
+      session_id: sessionIdStr,
       concept: n.text
     }));
 
