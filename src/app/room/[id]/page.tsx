@@ -140,8 +140,8 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
 
           {!permissionError ? (
             <>
-              <h1 style={{ color: '#005568' }}>Classroom Recording</h1>
-              <p>
+              <h1 style={{ color: '#000000' }}>Classroom Recording</h1>
+              <p style={{ color: '#000000' }}>
                 Welcome to Eagle School. For quality assurance and advanced AI post-class feedback analysis, 
                 <strong> audio and video may be recorded during this session.</strong>
               </p>

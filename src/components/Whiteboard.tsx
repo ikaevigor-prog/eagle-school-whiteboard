@@ -315,7 +315,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
     }
 
     const now = new Date();
-    const sessionIdStr = `${now.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' })} • ${now.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })}`;
+    const lessonDateStr = now.toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
 
     const urlParams = new URLSearchParams(window.location.search);
     const studentId = urlParams.get('student_id') || 'guest';
@@ -323,7 +323,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
     const payload = textNodes.filter(n => n.text.trim().length > 0).map(n => ({
       student_id: studentId,
       word: n.text,
-      translation: 'Авто-сохранено с урока',
+      translation: `Lesson on ${lessonDateStr}`,
       status: 'new'
     }));
 
@@ -341,10 +341,10 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
     // Check if initial empty board -> append Default Frame!
     const timer = setTimeout(() => {
        if (elementsRef.current.length === 0) {
-           const today = new Date().toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+           const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
            const defaultFrame: FrameElement = { 
-             type: 'frame', id: 'default-frame', x: 100, y: 100, 
-             width: 1200, height: 800, title: `Lesson Frame • ${today}` 
+             type: 'frame', id: 'default-frame', x: 200, y: 100, 
+             width: 800, height: 1131, title: `Lesson on ${today}` 
            };
            updateElementsLocallyAndSync([defaultFrame]);
        }
@@ -397,6 +397,9 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
 
       // Selection Deletion Mechanic!
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIdRef.current) {
+        // Protection: Never allow deleting the primary A4 frame
+        if (selectedIdRef.current === 'default-frame') return;
+        
         e.preventDefault();
         const newElements = elementsRef.current.filter(el => el.id !== selectedIdRef.current);
         updateElementsLocallyAndSync(newElements);
@@ -859,7 +862,10 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
         <ToolButton icon={<CircleIcon size={20} />} active={tool === 'circle'} onClick={() => setTool(tool === 'circle' ? 'select' : 'circle')} title="Circle" />
         <ToolButton icon={<Type size={20} />} active={tool === 'text'} onClick={() => setTool(tool === 'text' ? 'select' : 'text')} title="Text" />
         <ToolButton icon={<StickyNote size={20} />} active={tool === 'sticky'} onClick={() => setTool(tool === 'sticky' ? 'select' : 'sticky')} title="Sticky Note (N)" />
-        <ToolButton icon={<Trash2 size={20} color="#ef4444" />} active={false} onClick={() => updateElementsLocallyAndSync([])} title="Clear Entire Board" />
+        <ToolButton icon={<Trash2 size={20} color="#ef4444" />} active={false} onClick={() => {
+            const preservedFrame = elementsRef.current.find(e => e.id === 'default-frame');
+            updateElementsLocallyAndSync(preservedFrame ? [preservedFrame] : []);
+        }} title="Clear Entire Board" />
         {role === 'teacher' && (
           <ToolButton icon={<BookmarkCheck size={20} color="#10b981" />} active={false} onClick={handleEndSession} title="End Class & Extract Vocabulary" />
         )}
