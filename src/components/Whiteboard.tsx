@@ -863,8 +863,12 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
         <ToolButton icon={<Type size={20} />} active={tool === 'text'} onClick={() => setTool(tool === 'text' ? 'select' : 'text')} title="Text" />
         <ToolButton icon={<StickyNote size={20} />} active={tool === 'sticky'} onClick={() => setTool(tool === 'sticky' ? 'select' : 'sticky')} title="Sticky Note (N)" />
         <ToolButton icon={<Trash2 size={20} color="#ef4444" />} active={false} onClick={() => {
-            const preservedFrame = elementsRef.current.find(e => e.id === 'default-frame');
-            updateElementsLocallyAndSync(preservedFrame ? [preservedFrame] : []);
+            let preservedFrame = elementsRef.current.find(e => e.id === 'default-frame');
+            if (!preservedFrame) {
+               const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+               preservedFrame = { type: 'frame', id: 'default-frame', x: 200, y: 100, width: 800, height: 1131, title: `Lesson on ${today}` };
+            }
+            updateElementsLocallyAndSync([preservedFrame as BoardElement]);
         }} title="Clear Entire Board" />
         {role === 'teacher' && (
           <ToolButton icon={<BookmarkCheck size={20} color="#10b981" />} active={false} onClick={handleEndSession} title="End Class & Extract Vocabulary" />
