@@ -5,7 +5,7 @@
   background: white;
   border-radius: 12px;
   overflow: hidden;
-  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* Soft border for visual split */
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05);
 }
 
 /* ─── LEFT TOOLBAR (EDVIBE STYLE) ────────────────────── */
@@ -69,8 +69,14 @@
 .excHeader {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  justify-content: space-between;
   margin-bottom: 2rem;
+}
+
+.excTitleWrap {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
 }
 
 .excNumber {
@@ -89,29 +95,61 @@
   margin: 0;
 }
 
+.checkBtn {
+  background: #10b981;
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.checkBtn:hover {
+  background: #059669;
+}
+
+.checkBtn:disabled {
+  background: #cbd5e1;
+  cursor: not-allowed;
+}
+
 /* DRAG & DROP MOCKUP */
 .wordBank {
   display: flex;
   gap: 1rem;
   margin-bottom: 2.5rem;
   flex-wrap: wrap;
+  min-height: 50px;
+  padding: 0.5rem;
+  border-radius: 12px;
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
 }
 
 .draggableWord {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  padding: 0.75rem 1.5rem;
+  background: white;
+  border: 2px solid #e2e8f0;
+  padding: 0.6rem 1.25rem;
   border-radius: 8px;
   font-weight: 600;
   color: #334155;
   cursor: grab;
-  box-shadow: 0 2px 0 #cbd5e1;
-  transition: transform 0.1s;
+  box-shadow: 0 2px 0 #e2e8f0;
+  transition: all 0.1s;
+  user-select: none;
 }
 
 .draggableWord:active {
-  transform: translateY(2px);
-  box-shadow: none;
+  cursor: grabbing;
+}
+
+.draggableWord.selectedWord {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.2), 0 2px 0 #3b82f6;
+  color: #2563eb;
+  transform: translateY(-2px);
 }
 
 .picsGrid {
@@ -136,28 +174,56 @@
   justify-content: center;
   font-size: 3rem;
   box-shadow: inset 0 -4px 0 rgba(0,0,0,0.1);
+  user-select: none;
 }
 
-.dropZone, .dropZoneEmpty {
+.dropZone {
   width: 100%;
-  height: 48px;
+  min-height: 48px;
   border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-weight: 600;
-}
-
-.dropZone {
-  background: #3b82f6;
-  color: white;
-  border: 1px solid #2563eb;
-  box-shadow: 0 2px 0 #2563eb;
+  transition: all 0.2s;
+  cursor: pointer;
 }
 
 .dropZoneEmpty {
   border: 2px dashed #cbd5e1;
   background: #f8fafc;
+}
+
+.dropZoneEmpty:hover {
+  background: #f1f5f9;
+  border-color: #94a3b8;
+}
+
+.dropZoneFilled {
+  background: white;
+  border: 2px solid #cbd5e1;
+  color: #334155;
+  box-shadow: 0 2px 0 #cbd5e1;
+}
+
+.dropZoneFilled:hover {
+  border-color: #ef4444; /* Hovering over a filled slot hints you can remove it */
+  color: #ef4444;
+}
+
+/* VALIDATION STATES */
+.slotCorrect {
+  border-color: #10b981 !important;
+  background: #f0fdf4 !important;
+  color: #059669 !important;
+  box-shadow: 0 2px 0 #10b981 !important;
+}
+
+.slotWrong {
+  border-color: #ef4444 !important;
+  background: #fef2f2 !important;
+  color: #b91c1c !important;
+  box-shadow: 0 2px 0 #ef4444 !important;
 }
 
 /* ─── RIGHT SIDEBAR (SECTIONS) ───────────────────────── */
@@ -192,6 +258,7 @@
   display: flex;
   flex-direction: column;
   gap: 0.75rem;
+  user-select: none;
 }
 
 .planItem {
