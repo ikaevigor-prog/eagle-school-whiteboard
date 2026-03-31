@@ -406,7 +406,7 @@
 
 /* ─── RIGHT SIDEBAR (SECTIONS) ───────────────────────── */
 .rightSidebar {
-  width: 360px;
+  width: 320px;
   background: transparent;
   display: flex;
   flex-direction: column;

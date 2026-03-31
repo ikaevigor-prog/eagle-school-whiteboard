@@ -35,6 +35,9 @@ export default function LessonViewer({ videoDock }: { videoDock?: React.ReactNod
   const [dictInput, setDictInput] = useState('');
   const [lessonFinished, setLessonFinished] = useState(false);
   
+  // Anti-Rubberbanding lock (prevents network state from overriding local state on drag)
+  const lastLocalUpdateRef = useRef<number>(0);
+  
   // Validation state
   const [hasChecked, setHasChecked] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState<Record<string, number>>({});
@@ -53,6 +56,7 @@ export default function LessonViewer({ videoDock }: { videoDock?: React.ReactNod
 
   // Broadcast function to be manually called on UI actions
   const broadcastState = (overrideState?: any) => {
+    lastLocalUpdateRef.current = Date.now(); // We are making local changes
     if (isLoading || isReceivingRef.current) return;
     
     const stateSnapshot = overrideState || {
@@ -84,6 +88,11 @@ export default function LessonViewer({ videoDock }: { videoDock?: React.ReactNod
         // Someone joined and asked for state. Broadcast our current state.
         broadcastState();
         return;
+      }
+
+      // 🚨 ANTI-RUBBERBANDING: Ignore remote state if we recently made local changes
+      if (Date.now() - lastLocalUpdateRef.current < 600) {
+        return; 
       }
 
       const data = JSON.parse(payload);
