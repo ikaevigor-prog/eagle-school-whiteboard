@@ -1,5 +1,7 @@
 import { NextResponse } from 'next/server';
 
+export const dynamic = 'force-dynamic';
+
 // Temporary purely in-memory datastore for active board sessions during local dev!
 // In production, this will be replaced completely by Supabase/LiveKit.
 const globalBoardState: Record<string, any[]> = {};

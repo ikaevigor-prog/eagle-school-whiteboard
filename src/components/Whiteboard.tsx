@@ -63,7 +63,7 @@ function URLImage({ element, isSelected, tool, onSelect, onDragEnd, onResize }: 
 
   return (
     <Group x={element.x} y={element.y} draggable={tool === 'select'} onDragEnd={onDragEnd} onMouseDown={onSelect} onTap={onSelect}>
-      <KonvaImage image={img || undefined} width={element.width} height={element.height} stroke={isSelected ? '#3b82f6' : 'transparent'} strokeWidth={4} cornerRadius={8} shadowBlur={10} shadowColor="rgba(0,0,0,0.2)" />
+      <KonvaImage image={img || undefined} width={element.width} height={element.height} stroke={isSelected ? '#3b82f6' : 'transparent'} strokeWidth={4} cornerRadius={8} perfectDrawEnabled={false} />
       {isSelected && tool === 'select' && (
         <Circle
           x={element.width} y={element.height} radius={12} fill="#3b82f6" stroke="#ffffff" strokeWidth={3}
@@ -379,7 +379,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
       if (Date.now() - lastUpdateLock.current < 2000) return;
 
       try {
-        const res = await fetch(`/api/sync?roomId=${ROOM_ID}`);
+        const res = await fetch(`/api/sync?roomId=${ROOM_ID}&t=${Date.now()}`, { cache: 'no-store' });
         if (!res.ok) return;
         const data = await res.json();
         if (data.elements) {
