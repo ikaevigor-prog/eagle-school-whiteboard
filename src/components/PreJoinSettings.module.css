@@ -1,0 +1,266 @@
+.overlay {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(4px);
+  z-index: 9999;
+}
+
+.modal {
+  background: white;
+  width: 860px;
+  max-width: 95vw;
+  border-radius: 8px;
+  box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px 32px 16px;
+}
+
+.header h2 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111;
+}
+
+.closeBtn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: #555;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.closeBtn:hover {
+  color: #000;
+}
+
+.tabs {
+  display: flex;
+  gap: 24px;
+  padding: 0 32px;
+  border-bottom: 1px solid #e5e5e5;
+  margin-bottom: 24px;
+}
+
+.tab {
+  background: none;
+  border: none;
+  font-size: 15px;
+  font-weight: 600;
+  color: #555;
+  cursor: pointer;
+  padding: 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  position: relative;
+}
+
+.tab:hover {
+  color: #000;
+}
+
+.tabActive {
+  color: #111;
+}
+
+.tabActive::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background-color: #007bff; /* Blue line as in screenshot */
+  border-radius: 2px 2px 0 0;
+}
+
+.tabContent {
+  padding: 0 32px 32px;
+}
+
+/* Video & Audio tab splitting */
+.videoTab {
+  display: flex;
+  gap: 32px;
+  align-items: stretch; /* stretch to allow alignment */
+}
+
+.leftCol {
+  flex: 1.2;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.rightCol {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.videoPreviewArea {
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  background: #f1f3f5;
+  border-radius: 6px;
+  border: 1px solid #ccc;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.videoElement {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transform: scaleX(-1); /* mirror */
+}
+
+.noCamera {
+  color: #666;
+  font-size: 14px;
+  text-align: center;
+}
+
+.testBtn {
+  align-self: flex-start;
+  background: white;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  padding: 8px 16px;
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+  cursor: pointer;
+}
+
+.testBtn:hover:not(:disabled) {
+  background: #f8f9fa;
+  border-color: #bbb;
+}
+
+.formGroup {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.formGroup label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.selectWrapper select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  font-size: 14px;
+  color: #333;
+  appearance: none;
+  background: white url('data:image/svg+xml;utf8,<svg fill="none" viewBox="0 0 24 24" stroke="%23555" xmlns="http://www.w3.org/2000/svg"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>') no-repeat right 12px center;
+  background-size: 16px;
+}
+
+.selectWrapper select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.deviceRow {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.levelIndicator {
+  width: 42px;
+  height: 42px;
+  border: 1px solid #ccc;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #fafafa;
+  gap: 3px;
+}
+
+.bar {
+  width: 3px;
+  height: 14px;
+  background: #ddd;
+  border-radius: 2px;
+}
+.levelIndicator .bar:nth-child(2) { height: 20px; }
+
+/* Transcription tab */
+.transcriptionTab {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 10px 0;
+}
+
+.transcriptionItem {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  font-size: 18px;
+  font-weight: 500;
+  color: #222;
+}
+
+.checkIcon {
+  fill: #111; /* Black filled checkmark as per screenshot */
+  color: white; /* White inside */
+}
+
+/* Footer / Join Button */
+.footer {
+  padding: 24px;
+  border-top: 1px solid #f1f3f5;
+  background: #fafbfc;
+  display: flex;
+  justify-content: flex-end;
+}
+
+.joinBtn {
+  background: #0ea5e9;
+  color: white;
+  border: none;
+  padding: 12px 28px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.joinBtn:hover:not(:disabled) {
+  background: #0284c7;
+}
+
+.joinBtn:disabled {
+  background: #ccc;
+  cursor: not-allowed;
+}

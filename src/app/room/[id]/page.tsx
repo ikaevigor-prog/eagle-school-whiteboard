@@ -6,6 +6,7 @@ import { useSearchParams, useRouter } from 'next/navigation';
 import { Rnd } from 'react-rnd';
 import { Mic, Camera, ShieldAlert } from 'lucide-react';
 import styles from './room.module.css';
+import PreJoinSettings from '@/components/PreJoinSettings';
 
 // LiveKit Integrations
 import { Track } from 'livekit-client';
@@ -99,6 +100,9 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   const [hasConsented, setHasConsented] = useState(false);
   const [permissionError, setPermissionError] = useState(false);
   const [token, setToken] = useState("");
+  
+  const [selectedCamera, setSelectedCamera] = useState<string>("");
+  const [selectedMic, setSelectedMic] = useState<string>("");
 
   // Toggles for video visibility
   const [showTeacher, setShowTeacher] = useState(true);
@@ -133,45 +137,14 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   if (!hasConsented) {
     return (
       <main className={styles.modalBackground}>
-        <div className={`glass ${styles.consentCard}`}>
-          <div className={styles.alertIconBlock}>
-            <ShieldAlert size={48} color="#FF5722" />
-          </div>
-
-          {!permissionError ? (
-            <>
-              <h1 style={{ color: '#000000' }}>Classroom Recording</h1>
-              <p style={{ color: '#000000' }}>
-                Welcome to Eagle School. For quality assurance and advanced AI post-class feedback analysis, 
-                <strong> audio and video may be recorded during this session.</strong>
-              </p>
-              <div className={styles.permissionButtons}>
-                <button className={styles.primaryBtn} onClick={requestHardwareAccess}>
-                  <Mic size={18} /> Allow Hardware & Join
-                </button>
-                <button className={styles.secondaryBtn} onClick={() => router.push('/')}>
-                  Cancel
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <h1 style={{ color: '#FF5722' }}>Access Denied</h1>
-              <p>
-                Eagle School requires microphone and camera access to conduct virtual classes. 
-                Please grant permission in your browser settings.
-              </p>
-              <div className={styles.permissionButtons}>
-                <button className={styles.primaryBtn} onClick={requestHardwareAccess}>
-                  Try Again
-                </button>
-                <button className={styles.secondaryBtn} onClick={() => setHasConsented(true)}>
-                  Continue without Media
-                </button>
-              </div>
-            </>
-          )}
-        </div>
+        <PreJoinSettings 
+          onJoin={(cam, mic, speaker) => {
+            setSelectedCamera(cam);
+            setSelectedMic(mic);
+            setHasConsented(true);
+          }}
+          onCancel={() => router.push('/')}
+        />
       </main>
     );
   }
@@ -182,8 +155,8 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
 
   return (
     <LiveKitRoom
-      video={true}
-      audio={true}
+      video={selectedCamera ? { deviceId: selectedCamera } : true}
+      audio={selectedMic ? { deviceId: selectedMic } : true}
       token={token}
       serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
       data-lk-theme="default"
