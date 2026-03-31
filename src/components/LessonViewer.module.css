@@ -1,23 +1,30 @@
 .lessonViewer {
   display: flex;
+  justify-content: center;
+  align-items: flex-start;
   width: 100%;
   height: 100%;
-  background: #fdfdfd; /* Lighter background like ProgressMe */
+  background: #f4f7f9; /* ProgressMe backdrop color */
   overflow: hidden;
+  padding: 2rem;
+  gap: 1rem;
+  box-sizing: border-box;
 }
 
 /* ─── LEFT TOOLBAR ────────────────────── */
 .leftToolbar {
-  width: 60px;
-  background: #ffffff;
+  width: 56px;
+  background: white;
   display: flex;
   flex-direction: column;
   align-items: center;
   padding: 1rem 0;
-  gap: 1rem;
-  border-right: 1px solid #e2e8f0;
+  gap: 0.85rem;
+  border-radius: 16px;
   flex-shrink: 0;
-  box-shadow: 2px 0 10px rgba(0,0,0,0.02);
+  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
+  position: relative;
+  z-index: 50;
 }
 
 .toolIcon {
@@ -28,32 +35,161 @@
   justify-content: center;
   background: transparent;
   color: #94a3b8;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
   transition: all 0.2s;
   font-size: 1.25rem;
 }
 
-.toolIcon:hover {
+.toolIcon:hover, .toolIconActive {
+  background: #f0f7ff;
+  color: #0ea5e9;
+}
+
+/* Tool Popover (Dictionary, Timer, etc) */
+.toolPopover {
+  position: absolute;
+  left: 76px; /* Offset from the sidebar */
+  top: 0;
+  width: 300px;
+  background: white;
+  border-radius: 16px;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+  padding: 1.5rem;
+  z-index: 100;
+  animation: slideInLeft 0.2s ease-out forwards;
+}
+
+/* The little triangle pointing back to the icon */
+.toolPopover::before {
+  content: '';
+  position: absolute;
+  top: 18px;
+  left: -6px;
+  width: 14px;
+  height: 14px;
+  background: white;
+  transform: rotate(45deg);
+  border-radius: 2px 0 0 0;
+  box-shadow: -3px -3px 5px rgba(0,0,0,0.02);
+}
+
+@keyframes slideInLeft {
+  from { opacity: 0; transform: translateX(-10px); }
+  to { opacity: 1; transform: translateX(0); }
+}
+
+.popoverTitle {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 1.25rem;
+}
+
+/* Dictionary layout specifics */
+.dictInputWrap {
+  display: flex;
+  background: #fdfdfd;
+  border: 1px solid #cbd5e1;
+  border-radius: 10px;
+  overflow: hidden;
+  margin-bottom: 1.5rem;
+}
+
+.dictInput {
+  flex: 1;
+  border: none;
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  outline: none;
+}
+
+.dictAddBtn {
+  background: #38bdf8;
+  color: white;
+  border: none;
+  padding: 0 1rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s;
+}
+
+.dictAddBtn:hover {
+  background: #0ea5e9;
+}
+
+.dictEmpty {
+  text-align: center;
+  color: #94a3b8;
+  font-size: 0.9rem;
+  padding: 2rem 0;
+}
+
+.dictActionWrap {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.dictBottomBtn {
+  flex: 1;
+  padding: 0.6rem;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  text-align: center;
+  cursor: pointer;
+  border: none;
+}
+
+.dictBottomBtn.gray {
   background: #f1f5f9;
-  color: #3b82f6;
+  color: #64748b;
+}
+
+.dictBottomBtn.gray:hover {
+  background: #e2e8f0;
+}
+
+.primaryWideBtn {
+  width: 100%;
+  padding: 0.75rem;
+  background: #38bdf8;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-weight: 600;
+  margin-top: 0.5rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.primaryWideBtn:hover {
+  background: #0ea5e9;
 }
 
 /* ─── CENTRAL CONTENT ────────────────────────────────── */
 .lessonContent {
-  flex: 1;
-  background: #f0f7ff; /* ProgressMe very light blue */
-  padding: 2rem;
+  flex: 0 1 900px;
+  max-width: 900px;
+  width: 100%;
+  height: 100%;
+  background: white;
+  border-radius: 24px;
+  padding: 0;
   overflow-y: auto;
-  min-width: 0;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
   display: flex;
-  justify-content: center; /* Center to allow "воздух по бокам" */
+  flex-direction: column;
 }
 
 /* Define a max-width container inside lessonContent to create side margins */
 .contentInner {
   width: 100%;
-  max-width: 800px;
+  padding: 2.5rem 3rem;
+  margin: 0 auto;
 }
 
 .lessonMainTitle {
@@ -140,6 +276,7 @@
   border: 1px solid #e2e8f0;
   border-radius: 6px;
   font-weight: 500;
+  font-size: 1.15rem;
   color: #475569;
   cursor: grab;
   transition: all 0.1s;
@@ -222,6 +359,7 @@
   align-items: center;
   justify-content: center;
   font-weight: 500;
+  font-size: 1.15rem;
   color: #475569;
 }
 
@@ -270,21 +408,23 @@
 
 /* ─── RIGHT SIDEBAR (SECTIONS) ───────────────────────── */
 .rightSidebar {
-  width: 260px;
-  background: #f0f7ff; /* Matching content bg */
+  width: 320px;
+  height: 100%;
+  background: transparent;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
-  padding: 2rem 2rem 2rem 0; /* Padding around */
+  padding: 0;
+  gap: 1.5rem;
+  overflow-y: auto;
 }
 
 .sectionsBlock {
   background: white;
-  border-radius: 12px;
+  border-radius: 20px;
   padding: 1.5rem;
-  box-shadow: 0 4px 15px rgba(0,0,0,0.03);
-  position: sticky;
-  top: 2rem;
+  box-shadow: 0 4px 20px rgba(0,0,0,0.03);
+  flex: 1;
 }
 
 .sidebarTitle {
@@ -331,4 +471,180 @@
 .planActive::before {
   color: transparent;
   display: none;
+}
+
+/* ─── INLINE EXERCISES (Listen and Write) ─── */
+.inlineExercise {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 1.1rem;
+  color: #334155;
+  line-height: 2;
+  margin-top: 1rem;
+}
+
+.inlineInputWrapper {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  background: white;
+  min-width: 120px;
+  height: 38px;
+  overflow: hidden;
+  vertical-align: middle;
+  transition: border-color 0.2s;
+}
+
+.inlineInputWrapper:focus-within {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+.inlineInput {
+  flex: 1;
+  border: none;
+  outline: none;
+  padding: 0 0.75rem;
+  font-size: 1rem;
+  color: #1e293b;
+  font-weight: 500;
+  width: 100px;
+}
+
+/* ─── RATING SECTION ─── */
+.ratingSection {
+  margin-top: 4rem;
+  padding-top: 2rem;
+  border-top: 1px dashed #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+
+.ratingTitle {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+  margin-bottom: 0.5rem;
+}
+
+.ratingSubtitle {
+  font-size: 0.95rem;
+  color: #64748b;
+  margin-bottom: 1.5rem;
+  max-width: 400px;
+}
+
+.starsWrapper {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.starBtn {
+  background: transparent;
+  border: none;
+  font-size: 2.5rem;
+  color: #e2e8f0;
+  cursor: pointer;
+  transition: all 0.2s;
+  padding: 0;
+  line-height: 1;
+}
+
+.starBtn:hover, .starBtn:active {
+  color: #fbbf24;
+  transform: scale(1.1);
+}
+
+/* ─── SIDEBAR VIDEO COMPONENTS (ProgressMe Style) ─── */
+.videoDockPlaceholder {
+  background: #f8fafc;
+  border: 1px dashed #cbd5e1;
+  border-radius: 12px;
+  padding: 2rem 1rem;
+  text-align: center;
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.phoneIconRing {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: #ecfdf5;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 1rem;
+}
+
+.phoneText {
+  color: #475569;
+  font-weight: 500;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+}
+
+.connectBtn {
+  background: #10b981;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  padding: 0.6rem 1.25rem;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.connectBtn:hover {
+  background: #059669;
+}
+
+.videoDockActive {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.06);
+  margin-bottom: 1.5rem;
+  display: flex;
+  flex-direction: column;
+}
+
+.mainVideoWrap {
+  width: 100%;
+  aspect-ratio: 4 / 3;
+  background: #1e293b;
+  position: relative;
+}
+
+.pipVideoWrap {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  width: 30%;
+  aspect-ratio: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid white;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  background: #334155;
+}
+
+.videoMetaBar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.5rem 1rem;
+  background: #f8fafc;
+  border-top: 1px solid #f1f5f9;
+  color: #64748b;
+  font-size: 0.85rem;
+  font-weight: 500;
 }

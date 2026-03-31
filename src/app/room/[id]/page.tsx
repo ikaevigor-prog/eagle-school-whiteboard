@@ -4,7 +4,7 @@ import { use, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Rnd } from 'react-rnd';
-import { Mic, Camera, ShieldAlert } from 'lucide-react';
+import { Mic, Camera, ShieldAlert, PhoneCall, X } from 'lucide-react';
 import styles from './room.module.css';
 import PreJoinSettings from '@/components/PreJoinSettings';
 import LessonViewer from '@/components/LessonViewer';
@@ -89,6 +89,75 @@ function ActiveVideoFeeds({ showTeacher, showStudent }: { showTeacher: boolean, 
   );
 }
 
+// Sub-component to render docked videos for LessonViewer
+function DockedVideoFeeds() {
+  const [isSwapped, setIsSwapped] = useState(false);
+  const tracks = useTracks(
+    [{ source: Track.Source.Camera, withPlaceholder: true }],
+    { onlySubscribed: false }
+  );
+  
+  const teacherTrack = tracks.find(t => t.participant.identity === 'Teacher');
+  const studentTrack = tracks.find(t => t.participant.identity !== 'Teacher');
+
+  // By default, Student is Main (if present), Teacher is Sub. If swapped, Teacher is Main.
+  let mainTrack = studentTrack || teacherTrack;
+  let subTrack = mainTrack === studentTrack ? teacherTrack : null;
+
+  if (isSwapped && teacherTrack && studentTrack) {
+    mainTrack = teacherTrack;
+    subTrack = studentTrack;
+  }
+
+  if (!teacherTrack && !studentTrack) {
+    return (
+      <div className="videoDockPlaceholder" style={{ background: '#f8fafc', border: '1px dashed #cbd5e1', borderRadius: '12px', padding: '2rem 1rem', textAlign: 'center', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <div style={{ width: 56, height: 56, borderRadius: '50%', background: '#ecfdf5', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '1rem' }}>
+          <PhoneCall size={24} color="#10b981" />
+        </div>
+        <div style={{ color: '#475569', fontWeight: 500, fontSize: '0.95rem', marginBottom: '1rem' }}>В этом классе идет звонок</div>
+        <button style={{ background: '#10b981', color: 'white', border: 'none', borderRadius: '8px', padding: '0.6rem 1.25rem', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer' }}>Подключиться</button>
+      </div>
+    );
+  }
+
+  return (
+    <div className="videoDockActive" style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column' }}>
+      <div style={{ width: '100%', aspectRatio: '4/3', background: '#1e293b', position: 'relative' }}>
+        {mainTrack && (
+          <ParticipantTile 
+            trackRef={mainTrack} 
+            style={{ width: '100%', height: '100%', objectFit: 'cover' }} 
+          />
+        )}
+        {subTrack && (
+          <div 
+             onClick={() => setIsSwapped(!isSwapped)}
+             style={{ 
+               position: 'absolute', bottom: 12, right: 12, width: '35%', aspectRatio: '4/3', 
+               borderRadius: '10px', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.85)', 
+               boxShadow: '0 8px 20px rgba(0,0,0,0.4)', background: '#1e293b', 
+               cursor: 'pointer', transition: 'transform 0.2s', zIndex: 10 
+             }}
+             title="Поменять местами видео"
+             onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
+          >
+            <ParticipantTile 
+              trackRef={subTrack} 
+              style={{ width: '100%', height: '100%', objectFit: 'cover', pointerEvents: 'none' }} 
+            />
+          </div>
+        )}
+      </div>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '0.5rem 1rem', background: '#f8fafc', borderTop: '1px solid #f1f5f9', color: '#64748b', fontSize: '0.85rem', fontWeight: 500 }}>
+        <div>👥 2</div>
+        <div>🎤 0</div>
+      </div>
+    </div>
+  );
+}
+
 
 export default function RoomPage({ params }: { params: Promise<{ id: string }> }) {
   const resolvedParams = use(params);
@@ -111,92 +180,27 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   const [showTeacher, setShowTeacher] = useState(true);
   const [showStudent, setShowStudent] = useState(true);
 
-  // Authenticate and grab LiveKit Protocol JWT token
+  // Authenticate and grab LiveKit Protocol JWT token immediately on mount
   useEffect(() => {
-    if (joinStep !== 2) return;
-    
     fetch(`/api/livekit?room=${roomId}&role=${role}`)
       .then(res => res.json())
       .then(data => {
         if (data.token) setToken(data.token);
-        else alert("Failed to connect to LiveKit servers! Did you add the ENV variables?");
+        else console.warn("Failed to connect to LiveKit servers! Did you add the ENV variables?");
       })
-      .catch((e) => alert("Token generator unreachable. Server logs might indicate missing ENV vars."));
-  }, [joinStep, roomId, role]);
-
+      .catch((e) => console.warn("Token generator unreachable. Server logs might indicate missing ENV vars."));
+  }, [roomId, role]);
 
   const requestHardwareAccess = async () => {
     try {
       setPermissionError(false);
-      // Pre-warm Camera hardware constraints before handing off to LiveKit
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      // Stop the stream immediately, PreJoinSettings will request it again to render the preview
       stream.getTracks().forEach(t => t.stop());
-      setJoinStep(1); // Proceed to Preview Window
+      setJoinStep(1); 
     } catch (e) {
       setPermissionError(true);
     }
   };
-
-  // Step 0: Hardware Onboarding Modal (Friendly Permission Request)
-  if (joinStep === 0) {
-    return (
-      <main className={styles.modalBackground}>
-        <div className={`glass ${styles.consentCard}`} style={{ maxWidth: '500px', padding: '40px', textAlign: 'center' }}>
-          <div className={styles.alertIconBlock} style={{ background: 'rgba(249, 115, 22, 0.1)', padding: '20px', borderRadius: '50%', display: 'inline-block', marginBottom: '24px' }}>
-            <Camera size={48} color="#f97316" />
-          </div>
-
-          <h1 style={{ color: '#0f172a', fontSize: '24px', marginBottom: '16px' }}>Ready to join the class?</h1>
-          
-          {!permissionError ? (
-            <>
-              <p style={{ color: '#475569', fontSize: '15px', lineHeight: '1.6', marginBottom: '32px' }}>
-                Eagle School needs access to your camera and microphone to connect you with your teacher. 
-                Your browser will ask for permission on the next step.
-              </p>
-              <div className={styles.permissionButtons} style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                <button className={styles.secondaryBtn} onClick={() => router.push('/')} style={{ flex: 1 }}>
-                  Cancel
-                </button>
-                <button className={styles.primaryBtn} onClick={requestHardwareAccess} style={{ flex: 2, background: '#f97316', color: 'white' }}>
-                  <ShieldAlert size={18} /> Enable Camera & Mic
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <h1 style={{ color: '#ef4444', fontSize: '20px', marginTop: '-10px', marginBottom: '16px' }}>Access Denied</h1>
-              <p style={{ color: '#475569', fontSize: '15px', lineHeight: '1.6', marginBottom: '32px' }}>
-                We couldn't access your camera or microphone. Please click the lock icon 🔒 next to the URL bar in your browser to grant permissions, then try again.
-              </p>
-              <div className={styles.permissionButtons} style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
-                <button className={styles.primaryBtn} onClick={requestHardwareAccess} style={{ flex: 1, background: '#0f172a' }}>
-                  Try Again
-                </button>
-              </div>
-            </>
-          )}
-        </div>
-      </main>
-    );
-  }
-
-  // Step 1: Preview Settings Window
-  if (joinStep === 1) {
-    return (
-      <main className={styles.modalBackground}>
-        <PreJoinSettings 
-          onJoin={(cam, mic, speaker) => {
-            setSelectedCamera(cam);
-            setSelectedMic(mic);
-            setJoinStep(2); // Finally enter the class
-          }}
-          onCancel={() => setJoinStep(0)}
-        />
-      </main>
-    );
-  }
 
   if (!token) {
     return <div className={styles.loading}>Connecting to WebRTC Tunnel...</div>;
@@ -207,11 +211,43 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
       video={selectedCamera ? { deviceId: selectedCamera } : true}
       audio={selectedMic ? { deviceId: selectedMic } : true}
       token={token}
+      connect={joinStep === 2}
       serverUrl={process.env.NEXT_PUBLIC_LIVEKIT_URL}
       data-lk-theme="default"
       style={{ width: '100vw', height: '100vh', overflow: 'hidden' }}
     >
       <main className={styles.roomContainer}>
+        {/* OVERLAYS FOR PRE-JOIN (MODALS) */}
+        {joinStep < 2 && (
+          <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 100, background: 'rgba(0,0,0,0.5)', backdropFilter: 'blur(4px)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            {joinStep === 0 && (
+              <div className={`glass ${styles.consentCard}`} style={{ maxWidth: '400px', background: 'white', padding: '32px', borderRadius: '16px', textAlign: 'center', boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)' }}>
+                <div style={{ background: '#ecfdf5', width: 64, height: 64, margin: '0 auto 20px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <img src="/miniapp/assets/logo.png?v=2" alt="Avatar" style={{ width: '100%', height: '100%', objectFit: 'cover', borderRadius: '50%' }} onError={(e) => { (e.target as HTMLImageElement).src = 'https://i.pravatar.cc/150?u=a042581f4e29026704d'; }} />
+                </div>
+                <h2 style={{ color: '#0f172a', fontSize: '1.25rem', fontWeight: 600, marginBottom: '8px' }}>Входящий звонок</h2>
+                <p style={{ color: '#475569', fontSize: '0.9rem', marginBottom: '24px' }}>Anna приглашает вас к звонку в класс</p>
+                <div style={{ display: 'flex', gap: '12px' }}>
+                  <button onClick={() => router.push('/')} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#f43f5e', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Отклонить</button>
+                  <button onClick={requestHardwareAccess} style={{ flex: 1, padding: '10px', borderRadius: '8px', border: 'none', background: '#10b981', color: 'white', fontWeight: 600, cursor: 'pointer' }}>Подключиться</button>
+                </div>
+              </div>
+            )}
+            
+            {joinStep === 1 && (
+              <div style={{ background: 'white', borderRadius: '16px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.25)', maxWidth: '600px', width: '90%' }}>
+                <PreJoinSettings 
+                  onJoin={(cam, mic) => {
+                    setSelectedCamera(cam);
+                    setSelectedMic(mic);
+                    setJoinStep(2);
+                  }}
+                  onCancel={() => setJoinStep(0)}
+                />
+              </div>
+            )}
+          </div>
+        )}
         {/* TOP TOGGLE */}
         <div style={{ position: 'absolute', top: '16px', left: '50%', transform: 'translateX(-50%)', zIndex: 60, display: 'flex', gap: '8px', background: 'white', padding: '6px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
           <button 
@@ -239,13 +275,13 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
             />
           ) : (
             <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, paddingTop: '75px', background: '#f8fafc', overflow: 'hidden' }}>
-              <LessonViewer />
+              <LessonViewer videoDock={<DockedVideoFeeds />} />
             </div>
           )}
         </div>
         
-        {/* Dynamic LiveKit Video Feeds directly overlaying the Whiteboard */}
-        <ActiveVideoFeeds showTeacher={showTeacher} showStudent={showStudent} />
+        {/* Dynamic LiveKit Video Feeds overlaying the Whiteboard ONLY */}
+        {viewMode === 'whiteboard' && <ActiveVideoFeeds showTeacher={showTeacher} showStudent={showStudent} />}
 
         {/* Top Right Session Controls Corner */}
         <div className={styles.bottomControls}>

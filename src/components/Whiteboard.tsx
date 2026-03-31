@@ -3,8 +3,8 @@
 import { useState, useRef, useEffect } from 'react';
 import { Stage, Layer, Line, Rect, Circle, Group, Text, Image as KonvaImage } from 'react-konva';
 import { Html } from 'react-konva-utils';
-import { 
-  MousePointer2, Pen, Eraser, Square, Circle as CircleIcon, 
+import {
+  MousePointer2, Pen, Eraser, Square, Circle as CircleIcon,
   Video, VideoOff, Music, FileVideo, Save, BookOpen, X, Trash2, StickyNote, Play, Pause, BookmarkCheck, Type, Image as ImageIcon, Loader2
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
@@ -14,9 +14,9 @@ type ToolType = 'select' | 'pen' | 'eraser' | 'rect' | 'circle' | 'sticky' | 'te
 type StrokeElement = { type: 'stroke'; id: string; points: number[]; color: string; width: number; tool: 'pen' | 'eraser' };
 type RectElement = { type: 'rect'; id: string; x: number; y: number; width: number; height: number; fill: string };
 type CircleElement = { type: 'circle'; id: string; x: number; y: number; radius: number; fill: string };
-type MediaElement = { 
-  type: 'media'; id: string; x: number; y: number; url: string; mediaType: 'audio' | 'video'; 
-  isPlaying?: boolean; progress?: number; playbackRate?: number; 
+type MediaElement = {
+  type: 'media'; id: string; x: number; y: number; url: string; mediaType: 'audio' | 'video';
+  isPlaying?: boolean; progress?: number; playbackRate?: number;
 };
 type StickyElement = { type: 'sticky'; id: string; x: number; y: number; text: string; color: string };
 type TextElement = { type: 'text'; id: string; x: number; y: number; text: string; color: string; fontSize: number };
@@ -44,16 +44,16 @@ interface Lesson {
 const ROOM_ID = 'test-course-101'; // Hardcoded for this demo
 
 const PRESET_COLORS = [
-  '#000000', '#ef4444', 
-  '#f97316', '#22c55e', 
-  '#3b82f6', '#a855f7', 
+  '#000000', '#ef4444',
+  '#f97316', '#22c55e',
+  '#3b82f6', '#a855f7',
   '#ec4899', '#ffffff'
 ];
 
 // --- Native Image Loader Component ---
 function URLImage({ element, isSelected, tool, onSelect, onDragEnd, onResize }: any) {
   const [img, setImg] = useState<HTMLImageElement | null>(null);
-  
+
   useEffect(() => {
     const image = new window.Image();
     image.crossOrigin = 'Anonymous';
@@ -65,30 +65,30 @@ function URLImage({ element, isSelected, tool, onSelect, onDragEnd, onResize }: 
     <Group x={element.x} y={element.y} draggable={tool === 'select'} onDragEnd={onDragEnd} onMouseDown={onSelect} onTap={onSelect}>
       <KonvaImage image={img || undefined} width={element.width} height={element.height} stroke={isSelected ? '#3b82f6' : 'transparent'} strokeWidth={4} cornerRadius={8} shadowBlur={10} shadowColor="rgba(0,0,0,0.2)" />
       {isSelected && tool === 'select' && (
-         <Circle 
-            x={element.width} y={element.height} radius={12} fill="#3b82f6" stroke="#ffffff" strokeWidth={3}
-            draggable
-            onDragMove={(e) => {
-               e.cancelBubble = true;
-               const newWidth = Math.max(50, e.target.x());
-               const newHeight = Math.max(50, e.target.y());
-               onResize(newWidth, newHeight, false);
-            }}
-            onDragEnd={(e) => {
-               e.cancelBubble = true;
-               const newWidth = Math.max(50, e.target.x());
-               const newHeight = Math.max(50, e.target.y());
-               onResize(newWidth, newHeight, true);
-            }}
-            onMouseEnter={e => {
-               const container = e.target.getStage()?.container();
-               if (container) container.style.cursor = 'nwse-resize';
-            }}
-            onMouseLeave={e => {
-               const container = e.target.getStage()?.container();
-               if (container) container.style.cursor = 'default';
-            }}
-         />
+        <Circle
+          x={element.width} y={element.height} radius={12} fill="#3b82f6" stroke="#ffffff" strokeWidth={3}
+          draggable
+          onDragMove={(e) => {
+            e.cancelBubble = true;
+            const newWidth = Math.max(50, e.target.x());
+            const newHeight = Math.max(50, e.target.y());
+            onResize(newWidth, newHeight, false);
+          }}
+          onDragEnd={(e) => {
+            e.cancelBubble = true;
+            const newWidth = Math.max(50, e.target.x());
+            const newHeight = Math.max(50, e.target.y());
+            onResize(newWidth, newHeight, true);
+          }}
+          onMouseEnter={e => {
+            const container = e.target.getStage()?.container();
+            if (container) container.style.cursor = 'nwse-resize';
+          }}
+          onMouseLeave={e => {
+            const container = e.target.getStage()?.container();
+            if (container) container.style.cursor = 'default';
+          }}
+        />
       )}
     </Group>
   );
@@ -97,7 +97,7 @@ function URLImage({ element, isSelected, tool, onSelect, onDragEnd, onResize }: 
 // --- Custom Audio Player deeply synced to Global State ---
 function CustomAudioPlayer({ element, onUpdate }: { element: MediaElement, onUpdate: (updates: Partial<MediaElement>) => void }) {
   const audioRef = useRef<HTMLAudioElement>(null);
-  
+
   // Local reactive states mapped from props on mount, but heavily controlled by incoming syncs
   const [isPlaying, setIsPlaying] = useState(element.isPlaying || false);
   const [progress, setProgress] = useState(element.progress || 0);
@@ -158,9 +158,9 @@ function CustomAudioPlayer({ element, onUpdate }: { element: MediaElement, onUpd
   // Local Actions (Triggering API Payloads)
   const togglePlay = () => {
     const newPlaying = !isPlaying;
-    if (newPlaying) audioRef.current?.play().catch(() => {});
+    if (newPlaying) audioRef.current?.play().catch(() => { });
     else audioRef.current?.pause();
-    
+
     setIsPlaying(newPlaying);
     onUpdate({ isPlaying: newPlaying, progress: audioRef.current?.currentTime });
   };
@@ -170,7 +170,7 @@ function CustomAudioPlayer({ element, onUpdate }: { element: MediaElement, onUpd
     const rect = bar.getBoundingClientRect();
     const pos = (e.clientX - rect.left) / rect.width;
     const newTime = pos * duration;
-    
+
     if (audioRef.current) audioRef.current.currentTime = newTime;
     setProgress(newTime);
     onUpdate({ progress: newTime, isPlaying }); // Broadcast scrubbing location
@@ -197,27 +197,27 @@ function CustomAudioPlayer({ element, onUpdate }: { element: MediaElement, onUpd
       pointerEvents: 'none' // Passes generic clicks to Canvas for dragging
     }}>
       <audio ref={audioRef} src={element.url} preload="metadata" />
-      
-      <button 
+
+      <button
         onClick={togglePlay}
-        style={{ 
+        style={{
           width: 38, height: 38, borderRadius: '50%', background: '#0f172a',
-          border: 'none', color: 'white', display: 'flex', alignItems: 'center', 
+          border: 'none', color: 'white', display: 'flex', alignItems: 'center',
           justifyContent: 'center', cursor: 'pointer', flexShrink: 0,
           boxShadow: '0 4px 10px rgba(0, 0, 0, 0.1)',
-          pointerEvents: 'auto' 
+          pointerEvents: 'auto'
         }}
       >
         {isPlaying ? <Pause size={18} fill="white" /> : <Play size={18} fill="white" style={{ marginLeft: 2 }} />}
       </button>
 
-      <div 
+      <div
         onClick={handleSeek}
         style={{ flex: 1, height: 8, background: '#e2e8f0', borderRadius: 4, cursor: 'pointer', position: 'relative', pointerEvents: 'auto' }}
       >
-        <div style={{ 
-          position: 'absolute', top: 0, left: 0, height: '100%', 
-          background: '#0f172a', borderRadius: 4, 
+        <div style={{
+          position: 'absolute', top: 0, left: 0, height: '100%',
+          background: '#0f172a', borderRadius: 4,
           width: `${(progress / (duration || 1)) * 100}%`
         }} />
       </div>
@@ -228,13 +228,13 @@ function CustomAudioPlayer({ element, onUpdate }: { element: MediaElement, onUpd
 
       <div style={{ display: 'flex', gap: '4px', borderLeft: '1px solid #e2e8f0', paddingLeft: '12px' }}>
         {[0.5, 0.75, 1, 1.25].map(s => (
-          <button 
+          <button
             key={s} onClick={() => changeSpeed(s)}
-            style={{ 
+            style={{
               fontSize: '11px', fontWeight: 700, padding: '4px 8px', borderRadius: '6px',
-              background: speed === s ? 'rgba(0,0,0,0.05)' : 'transparent', 
+              background: speed === s ? 'rgba(0,0,0,0.05)' : 'transparent',
               color: '#0f172a', border: 'none',
-              cursor: 'pointer', transition: 'all 0.2s ease', pointerEvents: 'auto' 
+              cursor: 'pointer', transition: 'all 0.2s ease', pointerEvents: 'auto'
             }}
           >
             {s}x
@@ -249,8 +249,8 @@ function CustomAudioPlayer({ element, onUpdate }: { element: MediaElement, onUpd
 export default function Whiteboard({ role = 'teacher', showTeacher, showStudent, onToggleTeacher, onToggleStudent }: CustomBoardProps) {
   const [elements, setElements] = useState<BoardElement[]>([]);
   const elementsRef = useRef(elements);
-  elementsRef.current = elements; 
-  
+  elementsRef.current = elements;
+
   // Selection Physics
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const selectedIdRef = useRef(selectedId);
@@ -259,7 +259,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
   const [tool, setTool] = useState<ToolType>('pen');
   const isDrawing = useRef(false);
   const stageRef = useRef<any>(null);
-  
+
   const [penColor, setPenColor] = useState('#0f172a');
   const [penWidth, setPenWidth] = useState(4);
 
@@ -267,11 +267,11 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
   const [pendingMediaType, setPendingMediaType] = useState<'audio' | 'video' | 'image' | null>(null);
   const [isUploading, setIsUploading] = useState(false);
   const [isLibraryOpen, setIsLibraryOpen] = useState(false);
-  
+
   const [scale, setScale] = useState(1);
   const [position, setPosition] = useState({ x: 0, y: 0 });
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
-  
+
   // -- CRM Data States --
   const [savedLessons, setSavedLessons] = useState<Lesson[]>([]);
   const [isSaving, setIsSaving] = useState(false);
@@ -305,10 +305,10 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
 
   const handleEndSession = async () => {
     if (!window.confirm("End session and extract text/vocabulary for the AI and student?")) return;
-    
+
     // Extract semantics (both stickies and native text)
     const textNodes = elementsRef.current.filter((el) => el.type === 'sticky' || el.type === 'text') as (StickyElement | TextElement)[];
-    
+
     if (textNodes.length === 0) {
       return alert("No text found on board to extract.");
     }
@@ -329,9 +329,9 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
     if (payload.length > 0) {
       const { error } = await supabase.from('dictionary_words').insert(payload);
       if (!error) {
-         alert(`Successfully exported ${payload.length} words to the CRM Dictionary!`);
+        alert(`Successfully exported ${payload.length} words to the CRM Dictionary!`);
       } else {
-         alert("Error saving vocabulary. Are Supabase tables ready?");
+        alert("Error saving vocabulary. Are Supabase tables ready?");
       }
     }
   };
@@ -339,16 +339,16 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
   useEffect(() => {
     // Check if initial empty board -> append Default Frame!
     const timer = setTimeout(() => {
-       if (elementsRef.current.length === 0) {
-           const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
-           const defaultFrame: FrameElement = { 
-             type: 'frame', id: 'default-frame', x: 200, y: 100, 
-             width: 800, height: 1131, title: `Lesson on ${today}` 
-           };
-           updateElementsLocallyAndSync([defaultFrame]);
-       }
+      if (elementsRef.current.length === 0) {
+        const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+        const defaultFrame: FrameElement = {
+          type: 'frame', id: 'default-frame', x: 200, y: 100,
+          width: 800, height: 1131, title: `Lesson on ${today}`
+        };
+        updateElementsLocallyAndSync([defaultFrame]);
+      }
     }, 1500); // 1.5 second initialization delay to wait for network sync
-    
+
     setDimensions({ width: window.innerWidth, height: window.innerHeight });
     const handleResize = () => setDimensions({ width: window.innerWidth, height: window.innerHeight });
     window.addEventListener('resize', handleResize);
@@ -372,12 +372,12 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
   useEffect(() => {
     const pollSync = async () => {
       // Don't disrupt live freehand lines or actively dragging elements
-      if (isDrawing.current || isDragging.current) return; 
-      
+      if (isDrawing.current || isDragging.current) return;
+
       // Optimization: Ignore incoming cloud state for 2 seconds after a local change 
       // to give the POST request time to finish and prevent "rubber-banding" glitches
       if (Date.now() - lastUpdateLock.current < 2000) return;
-      
+
       try {
         const res = await fetch(`/api/sync?roomId=${ROOM_ID}`);
         if (!res.ok) return;
@@ -386,7 +386,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
           const isDifferent = JSON.stringify(data.elements) !== JSON.stringify(elementsRef.current);
           if (isDifferent) setElements(data.elements);
         }
-      } catch (e) {}
+      } catch (e) { }
     };
     const interval = setInterval(pollSync, 1000);
     return () => clearInterval(interval);
@@ -397,7 +397,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
     const handleKeyDown = (e: KeyboardEvent) => {
       // Ignore if user is inside a sticky note textarea
       if (e.target instanceof HTMLInputElement || e.target instanceof HTMLTextAreaElement) return;
-      
+
       if (e.key.toLowerCase() === 'n') {
         e.preventDefault();
         setTool('sticky');
@@ -407,7 +407,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
       if ((e.key === 'Delete' || e.key === 'Backspace') && selectedIdRef.current) {
         // Protection: Never allow deleting the primary A4 frame
         if (selectedIdRef.current === 'default-frame') return;
-        
+
         e.preventDefault();
         const newElements = elementsRef.current.filter(el => el.id !== selectedIdRef.current);
         updateElementsLocallyAndSync(newElements);
@@ -428,7 +428,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
 
   const handleMouseDown = (e: any) => {
     if (e.target.attrs?.id === 'html-overlay-container' || e.target.nodeType === 'HTML') return;
-    
+
     // Deselect if clicking pure background canvas
     if (tool === 'select' && e.target === e.target.getStage()) {
       setSelectedId(null);
@@ -463,7 +463,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
       setSelectedId(id);
       isDrawing.current = false;
     }
-    
+
     updateElementsLocallyAndSync(newElements);
   };
 
@@ -484,16 +484,16 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
       const dy = pos.y - lastElement.y;
       lastElement.radius = Math.sqrt(dx * dx + dy * dy);
     }
-    
+
     const newElements = elements.slice(0, elements.length - 1);
     newElements.push(lastElement);
-    setElements(newElements); 
+    setElements(newElements);
   };
 
   const handleMouseUp = () => {
     if (isDrawing.current) {
-        isDrawing.current = false;
-        updateElementsLocallyAndSync(elements);
+      isDrawing.current = false;
+      updateElementsLocallyAndSync(elements);
     }
   };
 
@@ -543,9 +543,9 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
     try {
       const ext = file.name.split('.').pop() || 'tmp';
       const filename = `${Date.now()}_${Math.random().toString(36).substring(7)}.${ext}`;
-      
+
       const { data, error } = await supabase.storage.from('lesson_materials').upload(filename, file);
-      
+
       if (error) throw new Error(error.message);
 
       const { data: publicUrlData } = supabase.storage.from('lesson_materials').getPublicUrl(filename);
@@ -558,34 +558,34 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
       let newElements = [...elements];
 
       if (pendingMediaType === 'image') {
-         const img = new window.Image();
-         img.src = url;
-         await new Promise((resolve) => {
-            img.onload = () => {
-               const width = img.width > 800 ? 800 : img.width;
-               const height = width * (img.height / img.width);
-               newElements.push({ type: 'image', id, x: centerX, y: centerY, width, height, url });
-               resolve(true);
-            };
-            img.onerror = () => {
-               newElements.push({ type: 'image', id, x: centerX, y: centerY, width: 400, height: 300, url });
-               resolve(true);
-            }
-         });
+        const img = new window.Image();
+        img.src = url;
+        await new Promise((resolve) => {
+          img.onload = () => {
+            const width = img.width > 800 ? 800 : img.width;
+            const height = width * (img.height / img.width);
+            newElements.push({ type: 'image', id, x: centerX, y: centerY, width, height, url });
+            resolve(true);
+          };
+          img.onerror = () => {
+            newElements.push({ type: 'image', id, x: centerX, y: centerY, width: 400, height: 300, url });
+            resolve(true);
+          }
+        });
       } else {
-         newElements.push({
-           type: 'media' as const,
-           id,
-           x: centerX,
-           y: centerY,
-           url,
-           mediaType: pendingMediaType,
-           isPlaying: false,
-           progress: 0,
-           playbackRate: 1
-         });
+        newElements.push({
+          type: 'media' as const,
+          id,
+          x: centerX,
+          y: centerY,
+          url,
+          mediaType: pendingMediaType,
+          isPlaying: false,
+          progress: 0,
+          playbackRate: 1
+        });
       }
-      
+
       updateElementsLocallyAndSync(newElements);
       setSelectedId(id);
     } catch (err: any) {
@@ -614,9 +614,9 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
         onTouchEnd={handleMouseUp}
         onWheel={handleWheel}
         onDragStart={() => { isDragging.current = true; }}
-        onDragEnd={(e) => { 
-           isDragging.current = false; 
-           lastUpdateLock.current = Date.now();
+        onDragEnd={(e) => {
+          isDragging.current = false;
+          lastUpdateLock.current = Date.now();
         }}
         scaleX={scale}
         scaleY={scale}
@@ -648,7 +648,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
             if (el.type === 'circle') {
               return <Circle key={el.id} x={el.x} y={el.y} radius={el.radius} fill="transparent" stroke={el.fill} strokeWidth={4} onClick={() => { if (tool === 'select') setSelectedId(el.id); }} onTap={() => { if (tool === 'select') setSelectedId(el.id); }} {...isSelected ? { shadowColor: '#3b82f6', shadowBlur: 10, shadowOpacity: 1 } : {}} />;
             }
-            
+
             // --- Draggable Sticky Note ---
             if (el.type === 'sticky') {
               return (
@@ -662,22 +662,22 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
                 >
                   <Rect width={200} height={200} fill="transparent" />
                   <Html divProps={{ style: { pointerEvents: 'none' } }} transform={true}>
-                    <div style={{ 
-                      width: 200, minHeight: 200, backgroundColor: el.color, 
-                      boxShadow: '2px 4px 10px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column', 
+                    <div style={{
+                      width: 200, minHeight: 200, backgroundColor: el.color,
+                      boxShadow: '2px 4px 10px rgba(0,0,0,0.15)', display: 'flex', flexDirection: 'column',
                       borderBottomRightRadius: '24px',
-                      ...(isSelected ? { outline: '4px solid #3b82f6', outlineOffset: '2px' } : {}) 
+                      ...(isSelected ? { outline: '4px solid #3b82f6', outlineOffset: '2px' } : {})
                     }}>
                       <div style={{ height: 24 }} />
                       <div style={{ padding: '0px 16px 16px 16px', flex: 1, display: 'flex', pointerEvents: 'auto' }}>
-                        <textarea 
+                        <textarea
                           value={el.text}
                           onChange={(e) => {
                             const newElements = elements.map(item => item.id === el.id ? { ...item, text: e.target.value } : item);
                             updateElementsLocallyAndSync(newElements);
                           }}
                           placeholder="Type here..."
-                          style={{ 
+                          style={{
                             flex: 1, width: '100%', border: 'none', background: 'transparent',
                             resize: 'none', outline: 'none', fontFamily: 'inherit', fontSize: '18px',
                             color: '#334155', fontWeight: 500, lineHeight: 1.4
@@ -689,7 +689,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
                 </Group>
               );
             }
-            
+
             // --- Draggable Media Overlays ---
             if (el.type === 'media') {
               return (
@@ -705,32 +705,32 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
                   <Html divProps={{ style: { pointerEvents: 'none' } }} transform={true}>
                     <div style={{ display: 'flex', flexDirection: 'column' }}>
                       {el.mediaType === 'video' ? (
-                        <div style={{ 
+                        <div style={{
                           background: '#0f172a', padding: 0, borderRadius: '12px',
                           boxShadow: '0 10px 30px rgba(0,0,0,0.3)', overflow: 'hidden', pointerEvents: 'auto',
-                          ...(isSelected ? { outline: '4px solid #3b82f6', outlineOffset: '2px' } : {}) 
+                          ...(isSelected ? { outline: '4px solid #3b82f6', outlineOffset: '2px' } : {})
                         }}>
                           {el.url.startsWith('blob:') ? (
                             <video width="560" height="315" src={el.url} controls style={{ outline: 'none', display: 'block' }} />
                           ) : (
-                            <iframe 
-                              width="560" height="315" src={el.url} title="Embedded Video" frameBorder="0" 
-                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" 
+                            <iframe
+                              width="560" height="315" src={el.url} title="Embedded Video" frameBorder="0"
+                              allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
                               allowFullScreen style={{ display: 'block' }}
                             />
                           )}
                         </div>
                       ) : (
-                        <div style={{ 
-                          pointerEvents: 'none', borderRadius: '30px', 
-                          ...(isSelected ? { boxShadow: '0 0 0 3px #3b82f6, 0 10px 25px rgba(59,130,246,0.2)' } : {}) 
+                        <div style={{
+                          pointerEvents: 'none', borderRadius: '30px',
+                          ...(isSelected ? { boxShadow: '0 0 0 3px #3b82f6, 0 10px 25px rgba(59,130,246,0.2)' } : {})
                         }}>
-                          <CustomAudioPlayer 
-                            element={el as MediaElement} 
+                          <CustomAudioPlayer
+                            element={el as MediaElement}
                             onUpdate={(updates) => {
-                               // Push Media Playback API status to Students instantly
-                               const newElements = elements.map(item => item.id === el.id ? { ...item, ...updates } : item) as BoardElement[];
-                               updateElementsLocallyAndSync(newElements);
+                              // Push Media Playback API status to Students instantly
+                              const newElements = elements.map(item => item.id === el.id ? { ...item, ...updates } : item) as BoardElement[];
+                              updateElementsLocallyAndSync(newElements);
                             }}
                           />
                         </div>
@@ -743,116 +743,116 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
             // --- Native Text ---
             if (el.type === 'text') {
               return (
-                 <Group key={el.id} x={el.x} y={el.y} draggable={tool === 'select'}
-                   onMouseDown={() => { if (tool === 'select') setSelectedId(el.id); }}
-                   onDragEnd={(e) => {
-                     const newElements = elements.map(item => item.id === el.id ? { ...item, x: e.target.x(), y: e.target.y() } : item);
-                     updateElementsLocallyAndSync(newElements);
-                   }}
-                 >
-                   {isSelected ? (
-                      <Html divProps={{ style: { pointerEvents: 'auto' } }}>
-                         <textarea 
-                           value={el.text} autoFocus
-                           onChange={(e) => {
-                             const newElements = elements.map(item => item.id === el.id ? { ...item, text: e.target.value } : item);
-                             updateElementsLocallyAndSync(newElements);
-                           }}
-                           placeholder="Type here..."
-                           style={{ 
-                             border: 'none', background: 'transparent', resize: 'none', 
-                             outline: '2px solid rgba(59, 130, 246, 0.5)', borderRadius: '4px',
-                             fontFamily: 'inherit', fontSize: Math.max(24, el.fontSize || 24) + 'px',
-                             color: el.color, fontWeight: 600, minWidth: '300px', minHeight: '100px'
-                           }}
-                         />
-                      </Html>
-                   ) : (
-                      <Text 
-                         text={el.text || '...'} 
-                         fontSize={Math.max(24, el.fontSize || 24)} 
-                         fill={el.color} 
-                         fontFamily="inherit" 
-                         fontWeight={600} 
+                <Group key={el.id} x={el.x} y={el.y} draggable={tool === 'select'}
+                  onMouseDown={() => { if (tool === 'select') setSelectedId(el.id); }}
+                  onDragEnd={(e) => {
+                    const newElements = elements.map(item => item.id === el.id ? { ...item, x: e.target.x(), y: e.target.y() } : item);
+                    updateElementsLocallyAndSync(newElements);
+                  }}
+                >
+                  {isSelected ? (
+                    <Html divProps={{ style: { pointerEvents: 'auto' } }}>
+                      <textarea
+                        value={el.text} autoFocus
+                        onChange={(e) => {
+                          const newElements = elements.map(item => item.id === el.id ? { ...item, text: e.target.value } : item);
+                          updateElementsLocallyAndSync(newElements);
+                        }}
+                        placeholder="Type here..."
+                        style={{
+                          border: 'none', background: 'transparent', resize: 'none',
+                          outline: '2px solid rgba(59, 130, 246, 0.5)', borderRadius: '4px',
+                          fontFamily: 'inherit', fontSize: Math.max(24, el.fontSize || 24) + 'px',
+                          color: el.color, fontWeight: 600, minWidth: '300px', minHeight: '100px'
+                        }}
                       />
-                   )}
-                 </Group>
+                    </Html>
+                  ) : (
+                    <Text
+                      text={el.text || '...'}
+                      fontSize={Math.max(24, el.fontSize || 24)}
+                      fill={el.color}
+                      fontFamily="inherit"
+                      fontWeight={600}
+                    />
+                  )}
+                </Group>
               );
             }
 
             // --- Expandable Lesson Frame ---
             if (el.type === 'frame') {
-               return (
-                  <Group key={el.id} x={el.x} y={el.y} draggable={tool === 'select'}
-                     onMouseDown={() => { if (tool === 'select') setSelectedId(el.id); }}
-                     onDragEnd={(e) => {
-                        const newElements = elements.map(item => item.id === el.id ? { ...item, x: e.target.x(), y: e.target.y() } : item);
+              return (
+                <Group key={el.id} x={el.x} y={el.y} draggable={tool === 'select'}
+                  onMouseDown={() => { if (tool === 'select') setSelectedId(el.id); }}
+                  onDragEnd={(e) => {
+                    const newElements = elements.map(item => item.id === el.id ? { ...item, x: e.target.x(), y: e.target.y() } : item);
+                    updateElementsLocallyAndSync(newElements);
+                  }}
+                >
+                  <Rect
+                    width={el.width} height={el.height} fill="#ffffff"
+                    cornerRadius={12} shadowBlur={20} shadowColor="rgba(0,0,0,0.1)"
+                    stroke={isSelected ? '#3b82f6' : 'transparent'} strokeWidth={4}
+                  />
+                  <Text
+                    x={24} y={-32} text={el.title} fontSize={20} fill="#64748b" fontWeight={600} fontFamily="inherit"
+                  />
+
+                  {/* Resizing Handle Bottom Right */}
+                  {isSelected && tool === 'select' && (
+                    <Circle
+                      x={el.width} y={el.height} radius={12} fill="#3b82f6" stroke="#ffffff" strokeWidth={3}
+                      draggable
+                      onDragMove={(e) => {
+                        e.cancelBubble = true;
+                        const newWidth = Math.max(300, e.target.x());
+                        const newHeight = Math.max(300, e.target.y());
+                        const newElements = elements.map(item => item.id === el.id ? { ...item, width: newWidth, height: newHeight } : item);
+                        setElements(newElements);
+                      }}
+                      onDragEnd={(e) => {
+                        e.cancelBubble = true;
+                        const newWidth = Math.max(300, e.target.x());
+                        const newHeight = Math.max(300, e.target.y());
+                        const newElements = elements.map(item => item.id === el.id ? { ...item, width: newWidth, height: newHeight } : item);
                         updateElementsLocallyAndSync(newElements);
-                     }}
-                  >
-                     <Rect 
-                        width={el.width} height={el.height} fill="#ffffff" 
-                        cornerRadius={12} shadowBlur={20} shadowColor="rgba(0,0,0,0.1)"
-                        stroke={isSelected ? '#3b82f6' : 'transparent'} strokeWidth={4}
-                     />
-                     <Text 
-                        x={24} y={-32} text={el.title} fontSize={20} fill="#64748b" fontWeight={600} fontFamily="inherit"
-                     />
-                     
-                     {/* Resizing Handle Bottom Right */}
-                     {isSelected && tool === 'select' && (
-                        <Circle 
-                           x={el.width} y={el.height} radius={12} fill="#3b82f6" stroke="#ffffff" strokeWidth={3}
-                           draggable
-                           onDragMove={(e) => {
-                              e.cancelBubble = true;
-                              const newWidth = Math.max(300, e.target.x());
-                              const newHeight = Math.max(300, e.target.y());
-                              const newElements = elements.map(item => item.id === el.id ? { ...item, width: newWidth, height: newHeight } : item);
-                              setElements(newElements);
-                           }}
-                           onDragEnd={(e) => {
-                              e.cancelBubble = true;
-                              const newWidth = Math.max(300, e.target.x());
-                              const newHeight = Math.max(300, e.target.y());
-                              const newElements = elements.map(item => item.id === el.id ? { ...item, width: newWidth, height: newHeight } : item);
-                              updateElementsLocallyAndSync(newElements);
-                           }}
-                           onMouseEnter={e => {
-                              const container = e.target.getStage()?.container();
-                              if (container) container.style.cursor = 'nwse-resize';
-                           }}
-                           onMouseLeave={e => {
-                              const container = e.target.getStage()?.container();
-                              if (container) container.style.cursor = 'default';
-                           }}
-                        />
-                     )}
-                  </Group>
-               );
+                      }}
+                      onMouseEnter={e => {
+                        const container = e.target.getStage()?.container();
+                        if (container) container.style.cursor = 'nwse-resize';
+                      }}
+                      onMouseLeave={e => {
+                        const container = e.target.getStage()?.container();
+                        if (container) container.style.cursor = 'default';
+                      }}
+                    />
+                  )}
+                </Group>
+              );
             }
 
             // --- Uploaded Images ---
             if (el.type === 'image') {
-               return (
-                  <URLImage 
-                     key={el.id} element={el} isSelected={isSelected} tool={tool}
-                     onSelect={() => { if (tool === 'select') setSelectedId(el.id); }}
-                     onDragEnd={(e: any) => {
-                        e.cancelBubble = true;
-                        const newElements = elements.map(item => item.id === el.id ? { ...item, x: e.target.x(), y: e.target.y() } : item);
-                        updateElementsLocallyAndSync(newElements);
-                     }}
-                     onResize={(newWidth: number, newHeight: number, isFinal: boolean) => {
-                        const newElements = elements.map(item => item.id === el.id ? { ...item, width: newWidth, height: newHeight } : item);
-                        if (isFinal) {
-                           updateElementsLocallyAndSync(newElements);
-                        } else {
-                           setElements(newElements);
-                        }
-                     }}
-                  />
-               );
+              return (
+                <URLImage
+                  key={el.id} element={el} isSelected={isSelected} tool={tool}
+                  onSelect={() => { if (tool === 'select') setSelectedId(el.id); }}
+                  onDragEnd={(e: any) => {
+                    e.cancelBubble = true;
+                    const newElements = elements.map(item => item.id === el.id ? { ...item, x: e.target.x(), y: e.target.y() } : item);
+                    updateElementsLocallyAndSync(newElements);
+                  }}
+                  onResize={(newWidth: number, newHeight: number, isFinal: boolean) => {
+                    const newElements = elements.map(item => item.id === el.id ? { ...item, width: newWidth, height: newHeight } : item);
+                    if (isFinal) {
+                      updateElementsLocallyAndSync(newElements);
+                    } else {
+                      setElements(newElements);
+                    }
+                  }}
+                />
+              );
             }
 
             return null;
@@ -863,8 +863,8 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
       {/* Unified Left Toolbar */}
       <div style={{
         position: 'absolute', top: '50%', left: 24, transform: 'translateY(-50%)',
-        display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px 8px', 
-        background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', 
+        display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px 8px',
+        background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)',
         borderRadius: '16px', border: '1px solid var(--glass-border)',
         boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 50
       }}>
@@ -876,38 +876,38 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
         <ToolButton icon={<Type size={20} />} active={tool === 'text'} onClick={() => setTool(tool === 'text' ? 'select' : 'text')} title="Text" />
         <ToolButton icon={<StickyNote size={20} />} active={tool === 'sticky'} onClick={() => setTool(tool === 'sticky' ? 'select' : 'sticky')} title="Sticky Note (N)" />
         <ToolButton icon={<Trash2 size={20} color="#ef4444" />} active={false} onClick={() => {
-            let preservedFrame = elementsRef.current.find(e => e.id === 'default-frame');
-            if (!preservedFrame) {
-               const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
-               preservedFrame = { type: 'frame', id: 'default-frame', x: 200, y: 100, width: 800, height: 1131, title: `Lesson on ${today}` };
-            }
-            updateElementsLocallyAndSync([preservedFrame as BoardElement]);
+          let preservedFrame = elementsRef.current.find(e => e.id === 'default-frame');
+          if (!preservedFrame) {
+            const today = new Date().toLocaleDateString('en-US', { day: 'numeric', month: 'long', year: 'numeric' });
+            preservedFrame = { type: 'frame', id: 'default-frame', x: 200, y: 100, width: 800, height: 1131, title: `Lesson on ${today}` };
+          }
+          updateElementsLocallyAndSync([preservedFrame as BoardElement]);
         }} title="Clear Entire Board" />
         {role === 'teacher' && (
           <ToolButton icon={<BookmarkCheck size={20} color="#10b981" />} active={false} onClick={handleEndSession} title="End Class & Extract Vocabulary" />
         )}
-        
+
         <div style={{ height: 1, backgroundColor: 'rgba(0,0,0,0.1)', margin: '4px 0' }} />
-        
+
         {role === 'teacher' && (
           <>
             <ToolButton icon={<BookOpen size={20} />} active={isLibraryOpen} onClick={() => setIsLibraryOpen(!isLibraryOpen)} title="Lesson Library" />
-            <ToolButton 
-               icon={isUploading && pendingMediaType === 'image' ? <Loader2 size={20} className="animate-spin" /> : <ImageIcon size={20} />} 
-               active={false} onClick={() => handleAddMedia('image')} title="Upload Image to Cloud" 
+            <ToolButton
+              icon={isUploading && pendingMediaType === 'image' ? <Loader2 size={20} className="animate-spin" /> : <ImageIcon size={20} />}
+              active={false} onClick={() => handleAddMedia('image')} title="Upload Image to Cloud"
             />
-            <ToolButton 
-               icon={isUploading && pendingMediaType === 'audio' ? <Loader2 size={20} className="animate-spin" /> : <Music size={20} />} 
-               active={false} onClick={() => handleAddMedia('audio')} title="Upload Audio" 
+            <ToolButton
+              icon={isUploading && pendingMediaType === 'audio' ? <Loader2 size={20} className="animate-spin" /> : <Music size={20} />}
+              active={false} onClick={() => handleAddMedia('audio')} title="Upload Audio"
             />
-            <ToolButton 
-               icon={isUploading && pendingMediaType === 'video' ? <Loader2 size={20} className="animate-spin" /> : <FileVideo size={20} />} 
-               active={false} onClick={() => handleAddMedia('video')} title="Upload Video" 
+            <ToolButton
+              icon={isUploading && pendingMediaType === 'video' ? <Loader2 size={20} className="animate-spin" /> : <FileVideo size={20} />}
+              active={false} onClick={() => handleAddMedia('video')} title="Upload Video"
             />
             <div style={{ height: 1, backgroundColor: 'rgba(0,0,0,0.1)', margin: '4px 0' }} />
           </>
         )}
-        
+
         <ToolButton icon={showTeacher ? <Video size={18} color="#3b82f6" /> : <VideoOff size={18} color="#64748b" />} active={showTeacher} onClick={onToggleTeacher} title="Toggle Teacher Video" />
         <ToolButton icon={showStudent ? <Video size={18} color="#8b5cf6" /> : <VideoOff size={18} color="#64748b" />} active={showStudent} onClick={onToggleStudent} title="Toggle Student Video" />
       </div>
@@ -915,8 +915,8 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
       {['pen', 'rect', 'circle', 'text', 'sticky'].includes(tool) && (
         <div style={{
           position: 'absolute', top: '50%', left: 90, transform: 'translateY(-50%)',
-          display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px 6px', 
-          background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', 
+          display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px 6px',
+          background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)',
           borderRadius: '16px', border: '1px solid var(--glass-border)',
           boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 50,
           animation: 'slideIn 0.2s ease-out'
@@ -925,45 +925,45 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
             <span style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Color</span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {PRESET_COLORS.map(c => (
-                <button 
+                <button
                   key={c} onClick={() => setPenColor(c)} title={c}
-                  style={{ 
-                    width: 24, height: 24, borderRadius: '50%', backgroundColor: c, 
-                    border: penColor === c ? '2px solid #000' : '1px solid rgba(0,0,0,0.1)', 
+                  style={{
+                    width: 24, height: 24, borderRadius: '50%', backgroundColor: c,
+                    border: penColor === c ? '2px solid #000' : '1px solid rgba(0,0,0,0.1)',
                     cursor: 'pointer', outline: 'none', transition: 'transform 0.1s',
                     boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
-                  }} 
+                  }}
                   onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.1)'}
                   onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}
                 />
               ))}
-              <div 
+              <div
                 title="Custom Color"
-                style={{ 
-                  position: 'relative', width: 24, height: 24, borderRadius: '50%', 
+                style={{
+                  position: 'relative', width: 24, height: 24, borderRadius: '50%',
                   overflow: 'hidden', cursor: 'pointer', border: '1px solid rgba(0,0,0,0.2)',
                   boxShadow: 'inset 0 2px 4px rgba(0,0,0,0.1)'
                 }}
               >
                 <div style={{ width: '100%', height: '100%', background: 'conic-gradient(red, yellow, lime, aqua, blue, magenta, red)' }} />
-                <input 
+                <input
                   type="color" value={penColor} onChange={(e) => setPenColor(e.target.value)}
-                  style={{ opacity: 0, position: 'absolute', top: -10, left: -10, width: 40, height: 40, cursor: 'pointer' }} 
+                  style={{ opacity: 0, position: 'absolute', top: -10, left: -10, width: 40, height: 40, cursor: 'pointer' }}
                 />
               </div>
             </div>
-            
+
           </div>
           <div style={{ height: 1, backgroundColor: 'rgba(0,0,0,0.1)' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
             <span style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Size</span>
             {[2, 6, 12].map(w => (
-              <button 
+              <button
                 key={w} onClick={() => setPenWidth(w)} title={`${w}px`}
-                style={{ 
-                  width: 32, height: 32, borderRadius: '8px', display: 'flex', 
-                  alignItems: 'center', justifyContent: 'center', 
-                  background: penWidth === w ? 'rgba(59, 130, 246, 0.1)' : 'transparent', 
+                style={{
+                  width: 32, height: 32, borderRadius: '8px', display: 'flex',
+                  alignItems: 'center', justifyContent: 'center',
+                  background: penWidth === w ? 'rgba(59, 130, 246, 0.1)' : 'transparent',
                   border: 'none', cursor: 'pointer', transition: 'background 0.2s'
                 }}
               >
@@ -978,8 +978,8 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
       {isLibraryOpen && (
         <div style={{
           position: 'absolute', top: '50%', left: 90, transform: 'translateY(-50%)',
-          width: '320px', padding: '24px', 
-          background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', 
+          width: '320px', padding: '24px',
+          background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)',
           borderRadius: '16px', border: '1px solid var(--glass-border)',
           boxShadow: '0 10px 40px rgba(0,0,0,0.15)', zIndex: 20,
           display: 'flex', flexDirection: 'column', gap: '16px',
@@ -991,40 +991,40 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
               <X size={20} color="#64748b" />
             </button>
           </div>
-          
+
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-             <input 
-                type="text" value={newLessonName} onChange={e => setNewLessonName(e.target.value)}
-                placeholder="Lesson Name..." 
-                style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
-             />
-             <button onClick={handleSaveLesson} disabled={isSaving} style={{
-               padding: '12px', borderRadius: '8px', background: isSaving ? '#94a3b8' : '#005568', color: 'white',
-               border: 'none', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s'
-             }}>
-               {isSaving ? 'Saving...' : 'Save Current Board'}
-             </button>
+            <input
+              type="text" value={newLessonName} onChange={e => setNewLessonName(e.target.value)}
+              placeholder="Lesson Name..."
+              style={{ padding: '10px', borderRadius: '8px', border: '1px solid #cbd5e1', outline: 'none' }}
+            />
+            <button onClick={handleSaveLesson} disabled={isSaving} style={{
+              padding: '12px', borderRadius: '8px', background: isSaving ? '#94a3b8' : '#005568', color: 'white',
+              border: 'none', fontWeight: 600, cursor: 'pointer', transition: 'background 0.2s'
+            }}>
+              {isSaving ? 'Saving...' : 'Save Current Board'}
+            </button>
           </div>
-          
+
           <div style={{ height: 1, backgroundColor: 'rgba(0,0,0,0.1)' }} />
-          
+
           <div style={{ maxHeight: '200px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: '8px' }}>
             {savedLessons.length === 0 ? (
-               <p style={{ margin: 0, fontSize: '14px', color: '#64748b', textAlign: 'center' }}>
-                 No CRM lessons found. Check Supabase connection or save one!
-               </p>
+              <p style={{ margin: 0, fontSize: '14px', color: '#64748b', textAlign: 'center' }}>
+                No CRM lessons found. Check Supabase connection or save one!
+              </p>
             ) : (
-                savedLessons.map(lesson => (
-                  <div key={lesson.id} onClick={() => updateElementsLocallyAndSync(lesson.board_state)} style={{
-                     padding: '12px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '8px', cursor: 'pointer',
-                     border: '1px solid rgba(59, 130, 246, 0.1)', transition: 'background 0.2s'
-                  }}>
-                     <strong style={{ fontSize: '14px', color: '#0f172a' }}>{lesson.title}</strong>
-                     <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
-                        {lesson.board_state.length} elements
-                     </div>
+              savedLessons.map(lesson => (
+                <div key={lesson.id} onClick={() => updateElementsLocallyAndSync(lesson.board_state)} style={{
+                  padding: '12px', background: 'rgba(59, 130, 246, 0.05)', borderRadius: '8px', cursor: 'pointer',
+                  border: '1px solid rgba(59, 130, 246, 0.1)', transition: 'background 0.2s'
+                }}>
+                  <strong style={{ fontSize: '14px', color: '#0f172a' }}>{lesson.title}</strong>
+                  <div style={{ fontSize: '12px', color: '#64748b', marginTop: '4px' }}>
+                    {lesson.board_state.length} elements
                   </div>
-                ))
+                </div>
+              ))
             )}
           </div>
         </div>

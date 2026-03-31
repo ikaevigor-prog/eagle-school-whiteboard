@@ -1,0 +1,123 @@
+.playerContainer {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem;
+  margin-top: 1.5rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 4px 15px rgba(0,0,0,0.02);
+}
+
+.controlsRow {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.playBtn {
+  background: transparent;
+  color: #38bdf8; /* light blue brand */
+  border: none;
+  cursor: pointer;
+  padding: 0.5rem;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.playBtn:hover {
+  background: #f0f9ff;
+  color: #0284c7;
+}
+
+.volBtn, .settingsBtn, .toggleScriptBtn {
+  background: transparent;
+  border: none;
+  color: #94a3b8;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s;
+}
+
+.volBtn:hover, .settingsBtn:hover, .toggleScriptBtn:hover {
+  color: #3b82f6;
+}
+
+.timelineWrapper {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  height: 24px;
+}
+
+.timeline {
+  width: 100%;
+  appearance: none;
+  -webkit-appearance: none;
+  background: #e2e8f0;
+  height: 6px;
+  border-radius: 4px;
+  outline: none;
+  cursor: pointer;
+}
+
+.timeline::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #38bdf8;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.timeline::-webkit-slider-thumb:hover {
+  background: #0284c7;
+}
+
+.timeInfo {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #94a3b8;
+  min-width: 80px;
+  text-align: right;
+  margin-right: 0.5rem;
+}
+
+.scriptSection {
+  margin-top: 1.5rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #f1f5f9;
+}
+
+.scriptHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.5rem;
+}
+
+.scriptTitle {
+  font-weight: 600;
+  color: #475569;
+}
+
+.scriptContent {
+  font-size: 0.95rem;
+  color: #334155;
+  line-height: 1.6;
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease-out, opacity 0.3s;
+  opacity: 0;
+}
+
+.scriptContent.scriptVisible {
+  max-height: 500px;
+  opacity: 1;
+  margin-top: 0.75rem;
+}

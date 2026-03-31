@@ -3,6 +3,7 @@
 import React, { useState, useEffect } from 'react';
 import styles from './LessonViewer.module.css';
 import AppLoader from './AppLoader';
+import AudioPlayer from './AudioPlayer';
 
 // Модельные данные упражнения
 const QUIZ_ITEMS = [
@@ -12,7 +13,7 @@ const QUIZ_ITEMS = [
   { id: 'dog', pic: '🐶', label: 'a dog', color: '#bfdbfe' },
 ];
 
-export default function LessonViewer() {
+export default function LessonViewer({ videoDock }: { videoDock?: React.ReactNode }) {
   // --- LOADER STATE ---
   const [isLoading, setIsLoading] = useState(true);
 
@@ -27,10 +28,16 @@ export default function LessonViewer() {
 
   // Dual-mode input: support click-to-match for mobile devices
   const [selectedWord, setSelectedWord] = useState<string | null>(null);
+  const [activeTool, setActiveTool] = useState<string | null>(null);
+  const [dictInput, setDictInput] = useState('');
+  const [lessonFinished, setLessonFinished] = useState(false);
   
   // Validation state
   const [hasChecked, setHasChecked] = useState(false);
-
+  const [failedAttempts, setFailedAttempts] = useState<Record<string, number>>({});
+  
+  // Inline Exercise 
+  const [listenAnswers, setListenAnswers] = useState({ q1: '', q2: '' });
   // Simulate remote loading of Lesson data
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -128,8 +135,23 @@ export default function LessonViewer() {
   };
 
   const handleCheckAnswers = () => {
-    setHasChecked(true);
     setSelectedWord(null);
+    let allRight = true;
+    
+    setFailedAttempts(prev => {
+      const newAttempts = { ...prev };
+      QUIZ_ITEMS.forEach(q => {
+        if (slots[q.id] && slots[q.id] !== q.label) {
+          newAttempts[q.id] = (newAttempts[q.id] || 0) + 1;
+          allRight = false;
+        } else if (slots[q.id] !== q.label) {
+          allRight = false; // Empty slot
+        }
+      });
+      return newAttempts;
+    });
+
+    setHasChecked(true);
   };
 
   const handleReset = () => {
@@ -148,7 +170,46 @@ export default function LessonViewer() {
       
       {/* Левая панель инструментов */}
       <div className={styles.leftToolbar}>
-        <div className={styles.toolIcon}>👥</div>
+        <div 
+          className={`${styles.toolIcon} ${activeTool === 'dict' ? styles.toolIconActive : ''}`} 
+          onClick={() => setActiveTool(activeTool === 'dict' ? null : 'dict')}
+        >
+          📖
+          {activeTool === 'dict' && (
+            <div className={styles.toolPopover} onClick={(e) => e.stopPropagation()}>
+              <h3 className={styles.popoverTitle}>Словарь</h3>
+              <div className={styles.dictInputWrap}>
+                <input 
+                  type="text" 
+                  placeholder="Добавить слово" 
+                  className={styles.dictInput}
+                  value={dictInput}
+                  onChange={(e) => setDictInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                       setDictInput(''); // mock addition
+                    }
+                  }}
+                />
+                <button className={styles.dictAddBtn} onClick={() => setDictInput('')}>➔</button>
+              </div>
+              
+              <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                 <div style={{ fontSize: '3rem', opacity: 0.2 }}>A文</div>
+              </div>
+              
+              <div className={styles.dictEmpty}>
+                Добавленных слов еще нет
+              </div>
+
+              <div className={styles.dictActionWrap}>
+                <button className={`${styles.dictBottomBtn} ${styles.gray}`}>Все слова</button>
+                <button className={`${styles.dictBottomBtn} ${styles.gray}`}>Учить слова</button>
+              </div>
+              <button className={styles.primaryWideBtn}>Запуск</button>
+            </div>
+          )}
+        </div>
         <div className={styles.toolIcon}>💬</div>
         <div className={styles.toolIcon}>⭐</div>
         <div className={styles.toolIcon}>⏱</div>
@@ -157,7 +218,26 @@ export default function LessonViewer() {
       {/* Центральная панель: Упражнения / Контент */}
       <section className={styles.lessonContent}>
         <div className={styles.contentInner}>
-          <h1 className={styles.lessonMainTitle}>Warm-up</h1>
+          {lessonFinished ? (
+            <div className={styles.ratingSection} style={{ marginTop: '4rem' }}>
+              <div style={{ textAlign: 'center', marginBottom: '2rem' }}>
+                <div style={{ fontSize: '4rem', marginBottom: '1rem' }}>🎉</div>
+                <h1 style={{ color: '#0f172a', marginBottom: '1rem', fontSize: '2rem' }}>Урок завершен!</h1>
+                <p style={{ color: '#64748b' }}>Отличная работа. Вы можете пересмотреть материалы позже.</p>
+              </div>
+              <h3 className={styles.ratingTitle}>Оцените урок</h3>
+              <p className={styles.ratingSubtitle}>Поставьте справедливую оценку, чтобы мы могли начислить баллы вашему преподавателю!</p>
+              <div className={styles.starsWrapper}>
+                {[1, 2, 3, 4, 5].map(star => (
+                   <button key={star} className={styles.starBtn} title={`Оценить на ${star}`}>
+                     ★
+                   </button>
+                ))}
+              </div>
+            </div>
+          ) : (
+            <>
+              <h1 className={styles.lessonMainTitle}>Warm-up</h1>
           
           <div className={styles.exerciseBlock}>
             <div className={styles.excHeader}>
@@ -218,28 +298,88 @@ export default function LessonViewer() {
                       {item.pic}
                     </div>
                     
-                    <div 
-                      className={`${styles.dropZoneContainer} ${placedWord ? styles.dropZoneFilled : styles.dropZoneEmpty} ${validationClass}`}
-                      onDragOver={(e) => e.preventDefault()}
-                      onDrop={(e) => handleDropToSlot(e, item.id)}
-                      onClick={() => handleSlotClick(item.id)}
-                    >
-                      {placedWord && <div className={styles.gripHandleLeft} style={{opacity: 0.5}}>⋮⋮</div>}
-                      <div className={styles.dropZoneTarget}>
-                        {placedWord || ''}
+                    <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                      <div 
+                        className={`${styles.dropZoneContainer} ${placedWord ? styles.dropZoneFilled : styles.dropZoneEmpty} ${validationClass}`}
+                        style={{ background: '#f8fafc', flex: 1 }}
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => handleDropToSlot(e, item.id)}
+                        onClick={() => handleSlotClick(item.id)}
+                      >
+                        {placedWord && <div className={styles.gripHandleLeft} style={{opacity: 0.5}}>⋮⋮</div>}
+                        <div className={styles.dropZoneTarget}>
+                          {placedWord || ''}
+                        </div>
+                        <div className={styles.gripHandleRight} style={{opacity: 0.3}}>⋮⋮</div>
                       </div>
-                      <div className={styles.gripHandleRight}>⋮⋮</div>
+                      
+                      {/* Feedback Indicators */}
+                      <div style={{ width: '30px', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                        {hasChecked && placedWord === item.label && (
+                          <div style={{ width: '4px', height: '24px', background: '#10b981', borderRadius: '4px' }} title="Correct" />
+                        )}
+                        {failedAttempts[item.id] > 0 && placedWord !== item.label && (
+                          <div style={{ display: 'flex', gap: '4px' }}>
+                            {Array.from({ length: Math.min(3, failedAttempts[item.id]) }).map((_, i) => (
+                               <div key={i} style={{ width: '8px', height: '8px', borderRadius: '50%', background: '#ef4444' }} title="Incorrect attempt" />
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
               })}
             </div>
+            {/* AUDIO PLAYER & FILL IN THE GAP */}
+            <div className={styles.excHeader} style={{ marginTop: '3rem' }}>
+              <div className={styles.excTitleWrap}>
+                <span className={styles.excNumber}>1.2</span>
+                <h2 className={styles.excTitle}>Listen and write</h2>
+              </div>
+            </div>
+
+            <AudioPlayer 
+              src="https://www.soundhelix.com/examples/mp3/SoundHelix-Song-1.mp3" 
+              script="Jay is a doctor. Dan and Jenna are students."
+            />
+
+            <div className={styles.inlineExercise}>
+              <span>Jay is a</span>
+              <div className={styles.inlineInputWrapper} style={{ background: listenAnswers.q1 ? 'white' : '#f8fafc' }}>
+                <input 
+                  type="text" 
+                  className={styles.inlineInput} 
+                  value={listenAnswers.q1}
+                  onChange={e => setListenAnswers(prev => ({ ...prev, q1: e.target.value }))}
+                />
+                <div className={styles.gripHandleRight} style={{ opacity: 0.3 }}>⋮⋮</div>
+              </div>
+              
+              <span>. Dan and Jenna are</span>
+              <div className={styles.inlineInputWrapper} style={{ background: listenAnswers.q2 ? 'white' : '#f8fafc' }}>
+                <input 
+                  type="text" 
+                  className={styles.inlineInput} 
+                  value={listenAnswers.q2}
+                  onChange={e => setListenAnswers(prev => ({ ...prev, q2: e.target.value }))}
+                />
+                <div className={styles.gripHandleRight} style={{ opacity: 0.3 }}>⋮⋮</div>
+              </div>
+              <span>.</span>
+            </div>
+
           </div>
+          </>
+          )}
         </div>
       </section>
 
-      {/* Правая панель: План (Sections) */}
+      {/* Правая панель: План (Sections) и Видео */}
       <aside className={styles.rightSidebar}>
+        {/* VIDEO DOCK PROVIDED BY PARENT (page.tsx) */}
+        {videoDock}
+
         <div className={styles.sectionsBlock}>
           <h3 className={styles.sidebarTitle}>Разделы</h3>
           <ul className={styles.planList}>
@@ -251,7 +391,21 @@ export default function LessonViewer() {
             <li className={styles.planItem}>Say it right</li>
             <li className={styles.planItem}>Let's talk</li>
             <li className={styles.planItem}>Cool-down</li>
-            <li className={styles.planItem} style={{ marginTop: '1rem', color: '#cbd5e1' }}>🏁 Результаты урока</li>
+            
+            <hr style={{ border: 'none', borderTop: '1px solid #f1f5f9', margin: '0.5rem 0' }} />
+            
+            {!lessonFinished && (
+              <li 
+                style={{ paddingLeft: '1rem', color: '#94a3b8', cursor: 'pointer', fontWeight: 500, display: 'flex', alignItems: 'center', gap: '8px' }} 
+                onClick={() => setLessonFinished(true)}
+              >
+                ⚑ Завершить урок
+              </li>
+            )}
+            
+            {lessonFinished && (
+              <li className={`${styles.planItem} ${styles.planActive}`}>🏁 Результаты урока</li>
+            )}
           </ul>
         </div>
       </aside>
