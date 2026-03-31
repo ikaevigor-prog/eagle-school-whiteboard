@@ -38,6 +38,7 @@ export default function LessonViewer({ videoDock }: { videoDock?: React.ReactNod
   // Validation state
   const [hasChecked, setHasChecked] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState<Record<string, number>>({});
+  const [hasRated, setHasRated] = useState(false);
   
   // Dictionary state
   const [dictionaryWords, setDictionaryWords] = useState<{word: string, translation: string}[]>([]);
@@ -293,6 +294,19 @@ export default function LessonViewer({ videoDock }: { videoDock?: React.ReactNod
     }
   };
 
+  const handleRateLesson = (star: number) => {
+    if (role === 'student' && !hasRated) {
+      const totalMistakes = Object.values(failedAttempts).reduce((sum, v) => sum + v, 0);
+      window.parent.postMessage({ 
+        type: 'SUBMIT_LESSON_RATING', 
+        payload: { rating: star, mistakes: totalMistakes } 
+      }, '*');
+      setHasRated(true);
+    } else if (role === 'teacher') {
+      alert('Оценку может поставить только ученик!');
+    }
+  };
+
   const allFilled = Object.values(slots).every(val => val !== null);
 
   // 3. RENDERERS
@@ -370,13 +384,19 @@ export default function LessonViewer({ videoDock }: { videoDock?: React.ReactNod
               </div>
               <h3 className={styles.ratingTitle}>Оцените урок</h3>
               <p className={styles.ratingSubtitle}>Поставьте справедливую оценку, чтобы мы могли начислить баллы вашему преподавателю!</p>
-              <div className={styles.starsWrapper}>
-                {[1, 2, 3, 4, 5].map(star => (
-                   <button key={star} className={styles.starBtn} title={`Оценить на ${star}`}>
-                     ★
-                   </button>
-                ))}
-              </div>
+              {!hasRated ? (
+                <div className={styles.starsWrapper}>
+                  {[1, 2, 3, 4, 5].map(star => (
+                     <button key={star} className={styles.starBtn} title={`Оценить на ${star}`} onClick={() => handleRateLesson(star)}>
+                       ★
+                     </button>
+                  ))}
+                </div>
+              ) : (
+                <div style={{ padding: '1rem', background: '#ecfdf5', color: '#065f46', borderRadius: '12px', fontWeight: 600, marginTop: '1rem' }}>
+                  Супер! Оценка и статистика урока успешно отправлены в ваш профиль.
+                </div>
+              )}
             </div>
           ) : (
             <>
