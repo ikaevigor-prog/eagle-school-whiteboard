@@ -123,7 +123,7 @@ function DockedVideoFeeds() {
 
   return (
     <div className="videoDockActive" style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ width: '100%', aspectRatio: '16/9', background: '#1e293b', position: 'relative' }}>
+      <div style={{ width: '100%', aspectRatio: '4/3', background: '#1e293b', position: 'relative' }}>
         {mainTrack && (
           <ParticipantTile 
             trackRef={mainTrack} 
@@ -134,7 +134,7 @@ function DockedVideoFeeds() {
           <div 
              onClick={() => setIsSwapped(!isSwapped)}
              style={{ 
-               position: 'absolute', bottom: 12, right: 12, width: '30%', aspectRatio: '16/9', 
+               position: 'absolute', bottom: 12, right: 12, width: '30%', aspectRatio: '4/3', 
                borderRadius: '8px', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.85)', 
                boxShadow: '0 8px 20px rgba(0,0,0,0.4)', background: '#1e293b', 
                cursor: 'pointer', transition: 'transform 0.2s', zIndex: 10 
