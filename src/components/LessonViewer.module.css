@@ -1,0 +1,209 @@
+.lessonViewer {
+  display: flex;
+  width: 100%;
+  height: 100%;
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05); /* Soft border for visual split */
+}
+
+/* ─── LEFT TOOLBAR (EDVIBE STYLE) ────────────────────── */
+.leftToolbar {
+  width: 65px;
+  background: #1e293b;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 1.5rem 0;
+  gap: 1.25rem;
+  border-right: 1px solid #334155;
+  flex-shrink: 0;
+}
+
+.toolIcon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #334155;
+  border-radius: 10px;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.2rem;
+}
+
+.toolIcon:hover {
+  background: #475569;
+  transform: translateY(-2px);
+}
+
+/* ─── CENTRAL CONTENT ────────────────────────────────── */
+.lessonContent {
+  flex: 1;
+  background: #f8fafc;
+  padding: 2.5rem;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+.lessonMainTitle {
+  font-size: 2rem;
+  font-weight: 800;
+  color: #0f172a;
+  margin-bottom: 2rem;
+  letter-spacing: -0.02em;
+}
+
+.exerciseBlock {
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 2rem;
+  margin-bottom: 2rem;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+}
+
+.excHeader {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 2rem;
+}
+
+.excNumber {
+  background: #eff6ff;
+  color: #3b82f6;
+  font-weight: 700;
+  padding: 0.2rem 0.6rem;
+  border-radius: 6px;
+  font-size: 0.95rem;
+}
+
+.excTitle {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0;
+}
+
+/* DRAG & DROP MOCKUP */
+.wordBank {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2.5rem;
+  flex-wrap: wrap;
+}
+
+.draggableWord {
+  background: #f1f5f9;
+  border: 1px solid #cbd5e1;
+  padding: 0.75rem 1.5rem;
+  border-radius: 8px;
+  font-weight: 600;
+  color: #334155;
+  cursor: grab;
+  box-shadow: 0 2px 0 #cbd5e1;
+  transition: transform 0.1s;
+}
+
+.draggableWord:active {
+  transform: translateY(2px);
+  box-shadow: none;
+}
+
+.picsGrid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 2rem;
+}
+
+.picItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1rem;
+}
+
+.picPlaceholder {
+  width: 100%;
+  aspect-ratio: 1;
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 3rem;
+  box-shadow: inset 0 -4px 0 rgba(0,0,0,0.1);
+}
+
+.dropZone, .dropZoneEmpty {
+  width: 100%;
+  height: 48px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.dropZone {
+  background: #3b82f6;
+  color: white;
+  border: 1px solid #2563eb;
+  box-shadow: 0 2px 0 #2563eb;
+}
+
+.dropZoneEmpty {
+  border: 2px dashed #cbd5e1;
+  background: #f8fafc;
+}
+
+/* ─── RIGHT SIDEBAR (SECTIONS) ───────────────────────── */
+.rightSidebar {
+  width: 250px;
+  background: #f1f5f9;
+  border-left: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  padding: 1.5rem;
+}
+
+.sectionsBlock {
+  background: white;
+  border-radius: 12px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.02);
+}
+
+.sidebarTitle {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #334155;
+  margin-bottom: 1.5rem;
+}
+
+.planList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.planItem {
+  font-size: 0.95rem;
+  color: #94a3b8;
+  cursor: pointer;
+  transition: color 0.2s;
+}
+
+.planItem:hover { color: #475569; }
+
+.planActive {
+  color: #3b82f6;
+  font-weight: 600;
+}
