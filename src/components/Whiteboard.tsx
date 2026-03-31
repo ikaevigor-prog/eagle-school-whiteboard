@@ -44,11 +44,10 @@ interface Lesson {
 const ROOM_ID = 'test-course-101'; // Hardcoded for this demo
 
 const PRESET_COLORS = [
-  '#000000', '#4b5563', '#ef4444', 
-  '#f97316', '#f59e0b', '#84cc16', 
-  '#22c55e', '#06b6d4', '#3b82f6', 
-  '#6366f1', '#a855f7', '#ec4899', 
-  '#005568', '#fef08a', '#ffffff'
+  '#000000', '#ef4444', 
+  '#f97316', '#22c55e', 
+  '#3b82f6', '#a855f7', 
+  '#ec4899', '#ffffff'
 ];
 
 // --- Native Image Loader Component ---
@@ -916,7 +915,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
       {['pen', 'rect', 'circle', 'text', 'sticky'].includes(tool) && (
         <div style={{
           position: 'absolute', top: '50%', left: 90, transform: 'translateY(-50%)',
-          display: 'flex', flexDirection: 'column', gap: '16px', padding: '16px', 
+          display: 'flex', flexDirection: 'column', gap: '8px', padding: '12px 6px', 
           background: 'var(--glass-bg)', backdropFilter: 'var(--glass-blur)', 
           borderRadius: '16px', border: '1px solid var(--glass-border)',
           boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 50,
