@@ -1,6 +1,6 @@
-'use client';
-
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useSearchParams } from 'next/navigation';
+import { useDataChannel } from '@livekit/components-react';
 import styles from './LessonViewer.module.css';
 import AppLoader from './AppLoader';
 import AudioPlayer from './AudioPlayer';
@@ -14,6 +14,9 @@ const QUIZ_ITEMS = [
 ];
 
 export default function LessonViewer({ videoDock }: { videoDock?: React.ReactNode }) {
+  const searchParams = useSearchParams();
+  const role = searchParams?.get('role') || 'student';
+
   // --- LOADER STATE ---
   const [isLoading, setIsLoading] = useState(true);
 
@@ -36,8 +39,112 @@ export default function LessonViewer({ videoDock }: { videoDock?: React.ReactNod
   const [hasChecked, setHasChecked] = useState(false);
   const [failedAttempts, setFailedAttempts] = useState<Record<string, number>>({});
   
+  // Dictionary state
+  const [dictionaryWords, setDictionaryWords] = useState<{word: string, translation: string}[]>([]);
+
   // Inline Exercise 
   const [listenAnswers, setListenAnswers] = useState({ q1: '', q2: '' });
+
+  // ------------------------------------------------------------------
+  // LIVEKIT REAL-TIME SYNC
+  // ------------------------------------------------------------------
+  const isReceivingRef = useRef(false);
+
+  // Broadcast function to be manually called on UI actions
+  const broadcastState = (overrideState?: any) => {
+    if (isLoading || isReceivingRef.current) return;
+    
+    const stateSnapshot = overrideState || {
+      slots,
+      wordBank,
+      listenAnswers,
+      hasChecked,
+      failedAttempts,
+      lessonFinished,
+      dictionaryWords
+    };
+    
+    try {
+      const payloadString = JSON.stringify(stateSnapshot);
+      const encoder = new TextEncoder();
+      send(encoder.encode(payloadString), { reliable: true });
+    } catch (e) {
+      console.warn("Sync channel not ready");
+    }
+  };
+
+  const { send } = useDataChannel('lesson-sync', (msg) => {
+    try {
+      // Decode payload
+      const decoder = new TextDecoder();
+      const payload = decoder.decode(msg.payload);
+      
+      if (payload === 'REQUEST_STATE') {
+        // Someone joined and asked for state. Broadcast our current state.
+        broadcastState();
+        return;
+      }
+
+      const data = JSON.parse(payload);
+      
+      // Prevent echo loop
+      isReceivingRef.current = true;
+      
+      if (data.slots) setSlots(data.slots);
+      if (data.wordBank) setWordBank(data.wordBank);
+      if (data.listenAnswers) setListenAnswers(data.listenAnswers);
+      if (typeof data.hasChecked === 'boolean') setHasChecked(data.hasChecked);
+      if (data.failedAttempts) setFailedAttempts(data.failedAttempts);
+      if (typeof data.lessonFinished === 'boolean') setLessonFinished(data.lessonFinished);
+      
+      // Handle Dictionary Words Sync and DB interception
+      if (data.dictionaryWords) {
+        if (data.dictionaryWords.length > dictionaryWords.length) {
+          const newWords = data.dictionaryWords.filter((nw: any) => !dictionaryWords.find(ow => ow.word === nw.word));
+          if (role === 'student') {
+            newWords.forEach((nw: any) => {
+              window.parent.postMessage({ type: 'SAVE_DICTIONARY_WORD', payload: nw }, '*');
+            });
+          }
+        }
+        setDictionaryWords(data.dictionaryWords);
+      }
+      
+      // Release lock shortly after React state processes
+      setTimeout(() => {
+        isReceivingRef.current = false;
+      }, 50);
+    } catch (e) {
+      console.error("Failed to parse sync message", e);
+    }
+  });
+
+  // When component mounts and finishes loading, ask others for the current state!
+  useEffect(() => {
+    if (!isLoading) {
+      try {
+        const encoder = new TextEncoder();
+        send(encoder.encode('REQUEST_STATE'), { reliable: true });
+      } catch (e) {}
+    }
+  }, [isLoading, send]);
+
+  // Broadcast ANY state change automatically (unless we are receiving it)
+  // To avoid the initial empty state overwriting others, we use an initialized ref.
+  const hasInitializedRef = useRef(false);
+  useEffect(() => {
+    if (isLoading) return;
+    if (!hasInitializedRef.current) {
+      hasInitializedRef.current = true;
+      return; // Skip first render after loading
+    }
+    
+    if (!isReceivingRef.current) {
+      broadcastState();
+    }
+  }, [slots, wordBank, listenAnswers, hasChecked, failedAttempts, lessonFinished, dictionaryWords]);
+  // ------------------------------------------------------------------
+
   // Simulate remote loading of Lesson data
   useEffect(() => {
     const timer = setTimeout(() => {
@@ -160,6 +267,32 @@ export default function LessonViewer({ videoDock }: { videoDock?: React.ReactNod
     setHasChecked(false);
   };
 
+  const handleAddDictWord = () => {
+    if (!dictInput.trim()) return;
+    
+    let w = dictInput.trim();
+    let t = "";
+    if (w.includes('-')) {
+        const parts = w.split('-');
+        w = parts[0].trim();
+        t = parts.slice(1).join('-').trim();
+    }
+    
+    if (dictionaryWords.find(dw => dw.word.toLowerCase() === w.toLowerCase())) {
+        setDictInput('');
+        return; // Exists
+    }
+    
+    const newWord = { word: w, translation: t };
+    setDictionaryWords(prev => [...prev, newWord]);
+    setDictInput('');
+
+    // If student adds it themselves locally, they save it.
+    if (role === 'student') {
+        window.parent.postMessage({ type: 'SAVE_DICTIONARY_WORD', payload: newWord }, '*');
+    }
+  };
+
   const allFilled = Object.values(slots).every(val => val !== null);
 
   // 3. RENDERERS
@@ -181,26 +314,36 @@ export default function LessonViewer({ videoDock }: { videoDock?: React.ReactNod
               <div className={styles.dictInputWrap}>
                 <input 
                   type="text" 
-                  placeholder="Добавить слово" 
+                  placeholder="Добавить слово (word - translation)" 
                   className={styles.dictInput}
                   value={dictInput}
                   onChange={(e) => setDictInput(e.target.value)}
                   onKeyDown={(e) => {
-                    if (e.key === 'Enter') {
-                       setDictInput(''); // mock addition
-                    }
+                    if (e.key === 'Enter') handleAddDictWord();
                   }}
                 />
-                <button className={styles.dictAddBtn} onClick={() => setDictInput('')}>➔</button>
+                <button className={styles.dictAddBtn} onClick={handleAddDictWord}>➔</button>
               </div>
               
-              <div style={{ textAlign: 'center', padding: '1rem 0' }}>
-                 <div style={{ fontSize: '3rem', opacity: 0.2 }}>A文</div>
-              </div>
-              
-              <div className={styles.dictEmpty}>
-                Добавленных слов еще нет
-              </div>
+              {dictionaryWords.length === 0 ? (
+                <>
+                  <div style={{ textAlign: 'center', padding: '1rem 0' }}>
+                     <div style={{ fontSize: '3rem', opacity: 0.2 }}>A文</div>
+                  </div>
+                  <div className={styles.dictEmpty}>
+                    Добавленных слов еще нет
+                  </div>
+                </>
+              ) : (
+                <div style={{ flex: 1, overflowY: 'auto', margin: '1rem 0', display: 'flex', flexDirection: 'column', gap: '8px', paddingRight: '4px' }}>
+                  {dictionaryWords.map((dw, i) => (
+                    <div key={i} style={{ padding: '8px 12px', background: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0', fontSize: '0.9rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                      <span style={{ fontWeight: 600, color: '#0f172a' }}>{dw.word}</span>
+                      {dw.translation && <span style={{ color: '#64748b', fontSize: '0.85rem' }}>{dw.translation}</span>}
+                    </div>
+                  ))}
+                </div>
+              )}
 
               <div className={styles.dictActionWrap}>
                 <button className={`${styles.dictBottomBtn} ${styles.gray}`}>Все слова</button>
