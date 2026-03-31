@@ -3,9 +3,8 @@
   justify-content: center;
   align-items: flex-start;
   width: 100%;
-  height: 100%;
+  min-height: 100%;
   background: #f4f7f9; /* ProgressMe backdrop color */
-  overflow: hidden;
   padding: calc(64px + 1.5rem) 2rem 1.5rem 2rem;
   gap: 1.5rem;
   box-sizing: border-box;
@@ -23,7 +22,8 @@
   border-radius: 16px;
   flex-shrink: 0;
   box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-  position: relative;
+  position: sticky;
+  top: calc(64px + 1.5rem);
   z-index: 50;
 }
 
@@ -175,11 +175,9 @@
   flex: 0 1 900px;
   max-width: 900px;
   width: 100%;
-  height: 100%;
   background: white;
   border-radius: 24px;
   padding: 0;
-  overflow-y: auto;
   box-shadow: 0 4px 20px rgba(0,0,0,0.03);
   display: flex;
   flex-direction: column;
@@ -409,13 +407,15 @@
 /* ─── RIGHT SIDEBAR (SECTIONS) ───────────────────────── */
 .rightSidebar {
   width: 360px;
-  height: 100%;
   background: transparent;
   display: flex;
   flex-direction: column;
   flex-shrink: 0;
   padding: 0;
   gap: 1.5rem;
+  position: sticky;
+  top: calc(64px + 1.5rem);
+  max-height: calc(100vh - 64px - 3rem);
   overflow-y: auto;
 }
 
