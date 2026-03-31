@@ -1,7 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import styles from './LessonViewer.module.css';
+import AppLoader from './AppLoader';
 
 // Модельные данные упражнения
 const QUIZ_ITEMS = [
@@ -12,6 +13,9 @@ const QUIZ_ITEMS = [
 ];
 
 export default function LessonViewer() {
+  // --- LOADER STATE ---
+  const [isLoading, setIsLoading] = useState(true);
+
   // 1. STATE MANAGEMENT
   // Word bank contains exactly the labels that have NOT been dropped into any pic slot
   const [wordBank, setWordBank] = useState<string[]>(['a boy', 'a girl', 'a cat', 'a dog']);
@@ -27,15 +31,20 @@ export default function LessonViewer() {
   // Validation state
   const [hasChecked, setHasChecked] = useState(false);
 
+  // Simulate remote loading of Lesson data
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsLoading(false);
+    }, 1200);
+    return () => clearTimeout(timer);
+  }, []);
+
   // 2. HANDLERS
-  
-  // Reset selected word if clicking outside or doing an operation
   const clearSelection = () => setSelectedWord(null);
 
   // --- DRAG AND DROP (DESKTOP) ---
   const handleDragStart = (e: React.DragEvent, word: string) => {
     e.dataTransfer.setData('word_id', word);
-    // If dragging from a slot, we will clear it onDrop by looking if the word was already somewhere.
     clearSelection();
   };
 
@@ -56,7 +65,6 @@ export default function LessonViewer() {
   // --- CLICK EXPERIENCES (MOBILE) ---
   const handleBankWordClick = (word: string) => {
     if (hasChecked) return;
-    // Toggle selection
     setSelectedWord(prev => prev === word ? null : word);
   };
 
@@ -66,10 +74,8 @@ export default function LessonViewer() {
     const currentWordInSlot = slots[picId];
 
     if (selectedWord) {
-      // Action: Put selected word into this slot
       moveWordToSlot(selectedWord, picId);
     } else if (currentWordInSlot) {
-      // Action: Remove word from slot back to bank
       returnToBank(currentWordInSlot);
     }
   };
@@ -93,7 +99,7 @@ export default function LessonViewer() {
       // Place the new word
       newSlots[targetPicId] = word;
 
-      // Now sync the wordBank safely based on this exact atomic operation
+      // Now sync the wordBank safely
       setWordBank(bank => {
         let newBank = bank.filter(w => w !== word);
         if (displacedWord && !newBank.includes(displacedWord)) {
@@ -109,7 +115,6 @@ export default function LessonViewer() {
   };
 
   const returnToBank = (word: string) => {
-    // Remove from slots
     setSlots(prev => {
       const newSlots = { ...prev };
       for (const key in newSlots) {
@@ -118,7 +123,6 @@ export default function LessonViewer() {
       return newSlots;
     });
 
-    // Add back to bank if not already there
     setWordBank(prev => prev.includes(word) ? prev : [...prev, word]);
     clearSelection();
   };
@@ -139,7 +143,10 @@ export default function LessonViewer() {
   // 3. RENDERERS
   return (
     <div className={styles.lessonViewer}>
-      {/* Левая панель инструментов (как в платформе) */}
+      {/* GLOBAL MOUNT LOADER */}
+      <AppLoader show={isLoading} />
+      
+      {/* Левая панель инструментов */}
       <div className={styles.leftToolbar}>
         <div className={styles.toolIcon}>👥</div>
         <div className={styles.toolIcon}>💬</div>
@@ -149,77 +156,84 @@ export default function LessonViewer() {
 
       {/* Центральная панель: Упражнения / Контент */}
       <section className={styles.lessonContent}>
-        <h1 className={styles.lessonMainTitle}>Warm-up</h1>
-        
-        <div className={styles.exerciseBlock}>
-          <div className={styles.excHeader}>
-            <div className={styles.excTitleWrap}>
-              <span className={styles.excNumber}>1.1</span>
-              <h2 className={styles.excTitle}>Match the words with the pictures</h2>
+        <div className={styles.contentInner}>
+          <h1 className={styles.lessonMainTitle}>Warm-up</h1>
+          
+          <div className={styles.exerciseBlock}>
+            <div className={styles.excHeader}>
+              <div className={styles.excTitleWrap}>
+                <span className={styles.excNumber}>1.1</span>
+                <h2 className={styles.excTitle}>Match the words with the pictures</h2>
+              </div>
+              
+              {!hasChecked ? (
+                <button 
+                  className={styles.checkBtn} 
+                  disabled={!allFilled}
+                  onClick={handleCheckAnswers}
+                >
+                  Check Answers
+                </button>
+              ) : (
+                <button className={styles.checkBtn} onClick={handleReset} style={{ background: '#3b82f6' }}>
+                  Reset Exercise
+                </button>
+              )}
             </div>
             
-            {!hasChecked ? (
-              <button 
-                className={styles.checkBtn} 
-                disabled={!allFilled}
-                onClick={handleCheckAnswers}
-              >
-                Check Answers
-              </button>
-            ) : (
-              <button className={styles.checkBtn} onClick={handleReset} style={{ background: '#3b82f6' }}>
-                Reset Exercise
-              </button>
-            )}
-          </div>
-          
-          {/* BANK СЛОВ */}
-          <div 
-            className={styles.wordBank}
-            onDragOver={(e) => e.preventDefault()}
-            onDrop={handleDropToBank}
-          >
-            {wordBank.length === 0 && <span style={{ color: '#94a3b8', fontStyle: 'italic', margin: 'auto' }}>All words placed</span>}
-            {wordBank.map((word) => (
-              <div 
-                key={word}
-                className={`${styles.draggableWord} ${selectedWord === word ? styles.selectedWord : ''}`}
-                draggable={!hasChecked}
-                onDragStart={(e) => handleDragStart(e, word)}
-                onClick={() => handleBankWordClick(word)}
-              >
-                {word}
-              </div>
-            ))}
-          </div>
-
-          {/* КАРТИНКИ (DROP ZONES) */}
-          <div className={styles.picsGrid}>
-            {QUIZ_ITEMS.map((item) => {
-              const placedWord = slots[item.id];
-              let validationClass = '';
-              
-              if (hasChecked && placedWord) {
-                validationClass = placedWord === item.label ? styles.slotCorrect : styles.slotWrong;
-              }
-
-              return (
-                <div key={item.id} className={styles.picItem}>
-                  <div className={styles.picPlaceholder} style={{ background: item.color }}>
-                    {item.pic}
-                  </div>
-                  
-                  <div 
-                    className={`${styles.dropZone} ${placedWord ? styles.dropZoneFilled : styles.dropZoneEmpty} ${validationClass}`}
-                    onDragOver={(e) => e.preventDefault()}
-                    onDrop={(e) => handleDropToSlot(e, item.id)}
-                    onClick={() => handleSlotClick(item.id)}
-                  >
-                    {placedWord || ''}
-                  </div>
+            {/* BANK СЛОВ */}
+            <div 
+              className={styles.wordBank}
+              onDragOver={(e) => e.preventDefault()}
+              onDrop={handleDropToBank}
+            >
+              {wordBank.length === 0 && <span style={{ color: '#94a3b8', fontStyle: 'italic', margin: 'auto' }}>All words placed</span>}
+              {wordBank.map((word) => (
+                <div 
+                  key={word}
+                  className={`${styles.draggableWord} ${selectedWord === word ? styles.selectedWord : ''}`}
+                  draggable={!hasChecked}
+                  onDragStart={(e) => handleDragStart(e, word)}
+                  onClick={() => handleBankWordClick(word)}
+                >
+                  <div className={styles.gripHandleLeft}>⋮⋮</div>
+                  <div className={styles.wordText}>{word}</div>
                 </div>
-              );
-            })}
+              ))}
+            </div>
+
+            {/* КАРТИНКИ (DROP ZONES) */}
+            <div className={styles.picsGrid}>
+              {QUIZ_ITEMS.map((item) => {
+                const placedWord = slots[item.id];
+                let validationClass = '';
+                
+                if (hasChecked && placedWord) {
+                  validationClass = placedWord === item.label ? styles.slotCorrect : styles.slotWrong;
+                }
+
+                return (
+                  <div key={item.id} className={styles.picItem}>
+                    <div className={styles.picPlaceholder} style={{ background: item.color }}>
+                      {item.pic}
+                    </div>
+                    
+                    <div 
+                      className={`${styles.dropZoneContainer} ${placedWord ? styles.dropZoneFilled : styles.dropZoneEmpty} ${validationClass}`}
+                      onDragOver={(e) => e.preventDefault()}
+                      onDrop={(e) => handleDropToSlot(e, item.id)}
+                      onClick={() => handleSlotClick(item.id)}
+                    >
+                      {placedWord && <div className={styles.gripHandleLeft} style={{opacity: 0.5}}>⋮⋮</div>}
+                      <div className={styles.dropZoneTarget}>
+                        {placedWord || ''}
+                      </div>
+                      <div className={styles.gripHandleRight}>⋮⋮</div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
           </div>
         </div>
       </section>
@@ -227,15 +241,17 @@ export default function LessonViewer() {
       {/* Правая панель: План (Sections) */}
       <aside className={styles.rightSidebar}>
         <div className={styles.sectionsBlock}>
-          <h3 className={styles.sidebarTitle}>Sections</h3>
+          <h3 className={styles.sidebarTitle}>Разделы</h3>
           <ul className={styles.planList}>
-            <li className={`${styles.planItem} ${styles.planActive}`}>✓ Warm-up</li>
-            <li className={styles.planItem}>Listening and Speaking</li>
-            <li className={styles.planItem}>Grammar</li>
-            <li className={styles.planItem}>Vocabulary</li>
-            <li className={styles.planItem}>Pronunciation</li>
-            <li className={styles.planItem}>Speaking</li>
-            <li className={styles.planItem} style={{ marginTop: '1rem', color: '#cbd5e1' }}>🏁 Finish</li>
+            <li className={styles.planItem}>Lesson information</li>
+            <li className={styles.planItem}>Vocabulary: Days of the week</li>
+            <li className={styles.planItem}>Vocabulary: Numbers</li>
+            <li className={`${styles.planItem} ${styles.planActive}`}>Listening</li>
+            <li className={styles.planItem}>Grammar: to be affirmative</li>
+            <li className={styles.planItem}>Say it right</li>
+            <li className={styles.planItem}>Let's talk</li>
+            <li className={styles.planItem}>Cool-down</li>
+            <li className={styles.planItem} style={{ marginTop: '1rem', color: '#cbd5e1' }}>🏁 Результаты урока</li>
           </ul>
         </div>
       </aside>
