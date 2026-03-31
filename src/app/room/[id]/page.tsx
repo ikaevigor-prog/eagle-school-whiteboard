@@ -248,44 +248,32 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
             )}
           </div>
         )}
-        {/* TOP TOGGLE */}
-        <div style={{ position: 'absolute', top: '16px', left: '50%', transform: 'translateX(-50%)', zIndex: 60, display: 'flex', gap: '8px', background: 'white', padding: '6px', borderRadius: '12px', boxShadow: '0 4px 12px rgba(0,0,0,0.1)' }}>
-          <button 
-            onClick={() => setViewMode('lesson')}
-            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: viewMode === 'lesson' ? '#f1f5f9' : 'transparent', fontWeight: viewMode === 'lesson' ? 600 : 500, color: viewMode === 'lesson' ? '#0f172a' : '#64748b', cursor: 'pointer', transition: 'all 0.2s', fontSize: '14px' }}
-          >
-            📋 Материалы (Урок)
-          </button>
-          <button 
-            onClick={() => setViewMode('whiteboard')}
-            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: viewMode === 'whiteboard' ? '#f1f5f9' : 'transparent', fontWeight: viewMode === 'whiteboard' ? 600 : 500, color: viewMode === 'whiteboard' ? '#0f172a' : '#64748b', cursor: 'pointer', transition: 'all 0.2s', fontSize: '14px' }}
-          >
-            🖍 Интерактивная доска
-          </button>
-        </div>
+        {/* UNIFIED TOP HEADER */}
+        <header className={styles.topHeader}>
+          {/* Left: Course Info */}
+          <div className={styles.courseTitle}>
+            General English: Unit 1
+            <span className={styles.statusBadge}>В ПРОЦЕССЕ</span>
+          </div>
 
-        <div className={styles.whiteboardArea} style={{ position: 'relative', width: '100%', height: '100%', overflow: 'hidden' }}>
-          {viewMode === 'whiteboard' ? (
-            <CustomBoard 
-              role={role as 'teacher' | 'student'}
-              showTeacher={showTeacher}
-              showStudent={showStudent}
-              onToggleTeacher={() => setShowTeacher(!showTeacher)}
-              onToggleStudent={() => setShowStudent(!showStudent)}
-            />
-          ) : (
-            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, paddingTop: '75px', background: '#f8fafc', overflow: 'hidden' }}>
-              <LessonViewer videoDock={<DockedVideoFeeds />} />
-            </div>
-          )}
-        </div>
-        
-        {/* Dynamic LiveKit Video Feeds overlaying the Whiteboard ONLY */}
-        {viewMode === 'whiteboard' && <ActiveVideoFeeds showTeacher={showTeacher} showStudent={showStudent} />}
+          {/* Center: View Toggle */}
+          <div style={{ display: 'flex', gap: '8px', background: 'white', padding: '4px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+            <button 
+              onClick={() => setViewMode('lesson')}
+              style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', background: viewMode === 'lesson' ? '#f1f5f9' : 'transparent', fontWeight: viewMode === 'lesson' ? 600 : 500, color: viewMode === 'lesson' ? '#0f172a' : '#64748b', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' }}
+            >
+              📋 Материалы (Урок)
+            </button>
+            <button 
+              onClick={() => setViewMode('whiteboard')}
+              style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', background: viewMode === 'whiteboard' ? '#f1f5f9' : 'transparent', fontWeight: viewMode === 'whiteboard' ? 600 : 500, color: viewMode === 'whiteboard' ? '#0f172a' : '#64748b', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' }}
+            >
+              🖍 Интерактивная доска
+            </button>
+          </div>
 
-        {/* Top Right Session Controls Corner */}
-        <div className={styles.bottomControls}>
-          <div style={{ display: 'flex', gap: '12px' }}>
+          {/* Right: Actions */}
+          <div style={{ display: 'flex', gap: '12px', alignItems: 'center' }}>
             {role === 'teacher' && (
               <button 
                 className={styles.leaveBtn} 
@@ -309,7 +297,27 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
               Leave Class
             </button>
           </div>
+        </header>
+
+        {/* MAIN CONTENT AREA */}
+        <div className={styles.whiteboardArea}>
+          {viewMode === 'whiteboard' ? (
+            <CustomBoard 
+              role={role as 'teacher' | 'student'}
+              showTeacher={showTeacher}
+              showStudent={showStudent}
+              onToggleTeacher={() => setShowTeacher(!showTeacher)}
+              onToggleStudent={() => setShowStudent(!showStudent)}
+            />
+          ) : (
+            <div style={{ position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, background: '#f8fafc', overflow: 'hidden' }}>
+              <LessonViewer videoDock={<DockedVideoFeeds />} />
+            </div>
+          )}
         </div>
+        
+        {/* Dynamic LiveKit Video Feeds overlaying the Whiteboard ONLY */}
+        {viewMode === 'whiteboard' && <ActiveVideoFeeds showTeacher={showTeacher} showStudent={showStudent} />}
       </main>
     </LiveKitRoom>
   );
