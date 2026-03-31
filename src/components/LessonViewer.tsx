@@ -56,8 +56,8 @@ export default function LessonViewer({ videoDock }: { videoDock?: React.ReactNod
 
   // Broadcast function to be manually called on UI actions
   const broadcastState = (overrideState?: any) => {
-    lastLocalUpdateRef.current = Date.now(); // We are making local changes
     if (isLoading || isReceivingRef.current) return;
+    lastLocalUpdateRef.current = Date.now(); // We are making local changes
     
     const stateSnapshot = overrideState || {
       slots,

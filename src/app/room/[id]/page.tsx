@@ -11,7 +11,7 @@ import LessonViewer from '@/components/LessonViewer';
 
 // LiveKit Integrations
 import { Track } from 'livekit-client';
-import { LiveKitRoom, RoomAudioRenderer, ParticipantTile, useTracks } from '@livekit/components-react';
+import { LiveKitRoom, RoomAudioRenderer, ParticipantTile, useTracks, useDataChannel } from '@livekit/components-react';
 import '@livekit/components-styles';
 
 // Dynamically import Konva Whiteboard (no SSR since it uses window objects)
@@ -156,6 +156,28 @@ function DockedVideoFeeds() {
       </div>
     </div>
   );
+}
+
+
+// Component to securely sync the current view mode (Lesson vs. Whiteboard) over LiveKit
+function ViewModeSyncer({ viewMode, setViewMode, role }: { viewMode: string, setViewMode: any, role: string }) {
+  const { send } = useDataChannel('view-sync', (msg: any) => {
+    if (role === 'student') {
+      const mode = new TextDecoder().decode(msg.payload);
+      if (mode === 'lesson' || mode === 'whiteboard') setViewMode(mode);
+    }
+  });
+
+  // When teacher changes view, broadcast it to students
+  useEffect(() => {
+    if (role === 'teacher') {
+      try {
+        send(new TextEncoder().encode(viewMode), { reliable: true });
+      } catch (e) {}
+    }
+  }, [viewMode, send, role]);
+
+  return null;
 }
 
 
@@ -318,6 +340,9 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         
         {/* Dynamic LiveKit Video Feeds overlaying the Whiteboard ONLY */}
         {viewMode === 'whiteboard' && <ActiveVideoFeeds showTeacher={showTeacher} showStudent={showStudent} />}
+        
+        {/* Invisible Syncer for viewMode */}
+        <ViewModeSyncer viewMode={viewMode} setViewMode={setViewMode} role={role} />
       </main>
     </LiveKitRoom>
   );

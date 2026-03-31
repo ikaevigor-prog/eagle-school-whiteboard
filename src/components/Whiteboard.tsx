@@ -464,7 +464,13 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
       isDrawing.current = false;
     }
 
-    updateElementsLocallyAndSync(newElements);
+    if (tool === 'pen' || tool === 'eraser') {
+      // For freehand strokes, only update local state to prevent API race conditions.
+      // The full stroke will be synced to the DB on MouseUp.
+      setElements(newElements);
+    } else {
+      updateElementsLocallyAndSync(newElements);
+    }
   };
 
   const handleMouseMove = (e: any) => {
