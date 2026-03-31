@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useRef, useState } from "react";
-import { Mic, Video, Volume2, X, CheckCircle, Smartphone } from "lucide-react";
+import { Mic, Video, Volume2, X, CheckCircle, Smartphone, ShieldAlert } from "lucide-react";
 import styles from "./PreJoinSettings.module.css";
 
 interface Device {
@@ -184,6 +184,12 @@ export default function PreJoinSettings({ onJoin, onCancel }: PreJoinSettingsPro
                 <button className={styles.testBtn} onClick={playTestSound} disabled={isTesting}>
                   Test devices
                 </button>
+                <div style={{ marginTop: '16px', display: 'flex', alignItems: 'flex-start', gap: '8px', padding: '12px', background: 'rgba(0,0,0,0.03)', borderRadius: '8px' }}>
+                  <ShieldAlert size={16} color="#3b82f6" style={{ marginTop: '2px', flexShrink: 0 }} />
+                  <p style={{ fontSize: '12px', color: '#475569', margin: 0, lineHeight: 1.4 }}>
+                    <strong>Privacy Notice:</strong> We do NOT record your video. Camera is only used for live communication during the class.
+                  </p>
+                </div>
               </div>
               
               <div className={styles.rightCol}>

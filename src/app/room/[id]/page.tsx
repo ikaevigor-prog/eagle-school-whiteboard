@@ -97,7 +97,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
   
   const role = searchParams.get('role') || 'teacher';
   
-  const [hasConsented, setHasConsented] = useState(false);
+  const [joinStep, setJoinStep] = useState<0 | 1 | 2>(0);
   const [permissionError, setPermissionError] = useState(false);
   const [token, setToken] = useState("");
   
@@ -110,7 +110,7 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
 
   // Authenticate and grab LiveKit Protocol JWT token
   useEffect(() => {
-    if (!hasConsented) return;
+    if (joinStep !== 2) return;
     
     fetch(`/api/livekit?room=${roomId}&role=${role}`)
       .then(res => res.json())
@@ -119,31 +119,77 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
         else alert("Failed to connect to LiveKit servers! Did you add the ENV variables?");
       })
       .catch((e) => alert("Token generator unreachable. Server logs might indicate missing ENV vars."));
-  }, [hasConsented, roomId, role]);
+  }, [joinStep, roomId, role]);
 
 
   const requestHardwareAccess = async () => {
     try {
       setPermissionError(false);
       // Pre-warm Camera hardware constraints before handing off to LiveKit
-      await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
-      setHasConsented(true);
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true, video: true });
+      // Stop the stream immediately, PreJoinSettings will request it again to render the preview
+      stream.getTracks().forEach(t => t.stop());
+      setJoinStep(1); // Proceed to Preview Window
     } catch (e) {
       setPermissionError(true);
     }
   };
 
-  // Hardware Onboarding Modal (Glassmorphism overlap)
-  if (!hasConsented) {
+  // Step 0: Hardware Onboarding Modal (Friendly Permission Request)
+  if (joinStep === 0) {
+    return (
+      <main className={styles.modalBackground}>
+        <div className={`glass ${styles.consentCard}`} style={{ maxWidth: '500px', padding: '40px', textAlign: 'center' }}>
+          <div className={styles.alertIconBlock} style={{ background: 'rgba(249, 115, 22, 0.1)', padding: '20px', borderRadius: '50%', display: 'inline-block', marginBottom: '24px' }}>
+            <Camera size={48} color="#f97316" />
+          </div>
+
+          <h1 style={{ color: '#0f172a', fontSize: '24px', marginBottom: '16px' }}>Ready to join the class?</h1>
+          
+          {!permissionError ? (
+            <>
+              <p style={{ color: '#475569', fontSize: '15px', lineHeight: '1.6', marginBottom: '32px' }}>
+                Eagle School needs access to your camera and microphone to connect you with your teacher. 
+                Your browser will ask for permission on the next step.
+              </p>
+              <div className={styles.permissionButtons} style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                <button className={styles.secondaryBtn} onClick={() => router.push('/')} style={{ flex: 1 }}>
+                  Cancel
+                </button>
+                <button className={styles.primaryBtn} onClick={requestHardwareAccess} style={{ flex: 2, background: '#f97316', color: 'white' }}>
+                  <ShieldAlert size={18} /> Enable Camera & Mic
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <h1 style={{ color: '#ef4444', fontSize: '20px', marginTop: '-10px', marginBottom: '16px' }}>Access Denied</h1>
+              <p style={{ color: '#475569', fontSize: '15px', lineHeight: '1.6', marginBottom: '32px' }}>
+                We couldn't access your camera or microphone. Please click the lock icon 🔒 next to the URL bar in your browser to grant permissions, then try again.
+              </p>
+              <div className={styles.permissionButtons} style={{ display: 'flex', gap: '16px', justifyContent: 'center' }}>
+                <button className={styles.primaryBtn} onClick={requestHardwareAccess} style={{ flex: 1, background: '#0f172a' }}>
+                  Try Again
+                </button>
+              </div>
+            </>
+          )}
+        </div>
+      </main>
+    );
+  }
+
+  // Step 1: Preview Settings Window
+  if (joinStep === 1) {
     return (
       <main className={styles.modalBackground}>
         <PreJoinSettings 
           onJoin={(cam, mic, speaker) => {
             setSelectedCamera(cam);
             setSelectedMic(mic);
-            setHasConsented(true);
+            setJoinStep(2); // Finally enter the class
           }}
-          onCancel={() => router.push('/')}
+          onCancel={() => setJoinStep(0)}
         />
       </main>
     );
