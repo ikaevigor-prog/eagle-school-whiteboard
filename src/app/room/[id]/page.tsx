@@ -4,7 +4,7 @@ import { use, useEffect, useState } from 'react';
 import dynamic from 'next/dynamic';
 import { useSearchParams, useRouter } from 'next/navigation';
 import { Rnd } from 'react-rnd';
-import { Mic, Camera, ShieldAlert, PhoneCall, X } from 'lucide-react';
+import { Mic, Camera, ShieldAlert, PhoneCall, X, BookOpen, PenTool } from 'lucide-react';
 import styles from './room.module.css';
 import PreJoinSettings from '@/components/PreJoinSettings';
 import LessonViewer from '@/components/LessonViewer';
@@ -123,7 +123,7 @@ function DockedVideoFeeds() {
 
   return (
     <div className="videoDockActive" style={{ background: 'white', borderRadius: '12px', overflow: 'hidden', boxShadow: '0 4px 12px rgba(0,0,0,0.06)', marginBottom: '1.5rem', display: 'flex', flexDirection: 'column' }}>
-      <div style={{ width: '100%', aspectRatio: '4/3', background: '#1e293b', position: 'relative' }}>
+      <div style={{ width: '100%', aspectRatio: '16/9', background: '#1e293b', position: 'relative' }}>
         {mainTrack && (
           <ParticipantTile 
             trackRef={mainTrack} 
@@ -134,8 +134,8 @@ function DockedVideoFeeds() {
           <div 
              onClick={() => setIsSwapped(!isSwapped)}
              style={{ 
-               position: 'absolute', bottom: 12, right: 12, width: '35%', aspectRatio: '4/3', 
-               borderRadius: '10px', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.85)', 
+               position: 'absolute', bottom: 12, right: 12, width: '30%', aspectRatio: '16/9', 
+               borderRadius: '8px', overflow: 'hidden', border: '2px solid rgba(255,255,255,0.85)', 
                boxShadow: '0 8px 20px rgba(0,0,0,0.4)', background: '#1e293b', 
                cursor: 'pointer', transition: 'transform 0.2s', zIndex: 10 
              }}
@@ -257,18 +257,20 @@ export default function RoomPage({ params }: { params: Promise<{ id: string }> }
           </div>
 
           {/* Center: View Toggle */}
-          <div style={{ display: 'flex', gap: '8px', background: 'white', padding: '4px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', gap: '8px', background: 'white', padding: '6px', borderRadius: '10px', boxShadow: '0 2px 8px rgba(0,0,0,0.05)', border: '1px solid #e2e8f0' }}>
             <button 
               onClick={() => setViewMode('lesson')}
-              style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', background: viewMode === 'lesson' ? '#f1f5f9' : 'transparent', fontWeight: viewMode === 'lesson' ? 600 : 500, color: viewMode === 'lesson' ? '#0f172a' : '#64748b', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 32, borderRadius: '6px', border: 'none', background: viewMode === 'lesson' ? '#f1f5f9' : 'transparent', color: viewMode === 'lesson' ? '#0f172a' : '#94a3b8', cursor: 'pointer', transition: 'all 0.2s' }}
+              title="Материалы (Урок)"
             >
-              📋 Материалы (Урок)
+              <BookOpen size={18} />
             </button>
             <button 
               onClick={() => setViewMode('whiteboard')}
-              style={{ padding: '6px 14px', borderRadius: '6px', border: 'none', background: viewMode === 'whiteboard' ? '#f1f5f9' : 'transparent', fontWeight: viewMode === 'whiteboard' ? 600 : 500, color: viewMode === 'whiteboard' ? '#0f172a' : '#64748b', cursor: 'pointer', transition: 'all 0.2s', fontSize: '13px' }}
+              style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', width: 40, height: 32, borderRadius: '6px', border: 'none', background: viewMode === 'whiteboard' ? '#f1f5f9' : 'transparent', color: viewMode === 'whiteboard' ? '#0f172a' : '#94a3b8', cursor: 'pointer', transition: 'all 0.2s' }}
+              title="Интерактивная доска"
             >
-              🖍 Интерактивная доска
+              <PenTool size={18} />
             </button>
           </div>
 
