@@ -921,7 +921,7 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
           boxShadow: '0 10px 30px rgba(0,0,0,0.1)', zIndex: 50,
           animation: 'slideIn 0.2s ease-out'
         }}>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', width: 'max-content' }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', alignItems: 'center', width: '36px' }}>
             <span style={{ fontSize: '10px', fontWeight: 600, color: '#94a3b8', textTransform: 'uppercase' }}>Color</span>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {PRESET_COLORS.map(c => (
@@ -953,16 +953,6 @@ export default function Whiteboard({ role = 'teacher', showTeacher, showStudent,
               </div>
             </div>
             
-            <div style={{ 
-              display: 'flex', alignItems: 'center', marginTop: '6px', 
-              border: '1px solid rgba(0,0,0,0.1)', borderRadius: '6px', overflow: 'hidden'
-            }}>
-              <div style={{ backgroundColor: '#f1f5f9', padding: '6px 8px', color: '#64748b', fontSize: '11px', fontWeight: 600 }}>HEX</div>
-              <input 
-                 type="text" value={penColor} onChange={(e) => setPenColor(e.target.value)}
-                 style={{ width: '65px', border: 'none', outline: 'none', padding: '6px 4px', fontSize: '11px', fontWeight: 600, color: '#0f172a', textTransform: 'uppercase', background: 'white' }}
-              />
-            </div>
           </div>
           <div style={{ height: 1, backgroundColor: 'rgba(0,0,0,0.1)' }} />
           <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', alignItems: 'center' }}>
